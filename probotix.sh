@@ -1,6 +1,6 @@
 #!/bin/bash
 # 	PROBOTIX LinuxCNC Configurator
-# zip file created Tue Dec 19 15:39:56 CST 2017
+# 	zip file created Tue Dec 26 10:35:38 CST 2017
 #
 # 	Copyright 2016 PROBOTIX
 # 	Written by Len Shelton
@@ -35,7 +35,7 @@
 #
 # 	Rev1.8
 # 		Create log file
-# 		Started seperating prompts from other stuff so that we can implement defaults and load prior config
+# 		Started separating prompts from other stuff so that we can implement defaults and load prior config
 # 		Turned off g-zip stdout output
 # 		Added MPG pendant support on PARPORT2
 # 		Increased max velocity on rotary axis to 2 revs/second
@@ -48,6 +48,8 @@
 # 		Remove second e-stop code if not in use
 # 		Remove references to a-axis if no rotary present
 # 		General code cleanup and unified formatting
+# 	Rev1.8.2
+# 		Added HAL code for a-axis rotation jogging
 #
 # 	Todo:
 # 		Fix missing NGC startup file causes o100 to not be found
@@ -67,17 +69,16 @@
 # 		Put axis files back in original directories
 #
 #
-_VERSION="1.8.1"
+_VERSION="1.8.2"
 ###################################################################################################
 # 	some variables
 #
 INSTALLDIR=$(pwd)
 DATETIME=$(date +'%Y-%m-%d %T')
-#DATETIME=`date +%Y-%m-%d %H:%M:%S`
 REBOOT=0
 CONFIG_FILE="/home/probotix/LINUXCNC_CONFIG"
 LOG_FILE="/home/probotix/LINUXCNC_LOG"
-rm -f $LOG_FILE
+#rm -f $LOG_FILE
 
 ###################################################################################################
 # 	push password into sudo so that it doesnt prompt for it later
@@ -122,7 +123,7 @@ if [ -e $CONFIG_FILE ]
 then
 	# config exists
 	# load config variables
-	source $CONFIG_FILE
+	source <(grep VERSION $CONFIG_FILE)
 	echo "$CONFIG_FILE $VERSION found!" >> $LOG_FILE
 	# just remove it for now and create a new config file
 	rm -f $CONFIG_FILE
@@ -139,6 +140,7 @@ else
 	echo "NEW Configuration Backup Created!" >> $LOG_FILE
 fi
 
+# reset version just in case previous config loaded
 VERSION=$_VERSION
 echo "DATE="$DATETIME >> $CONFIG_FILE
 echo "VERSION=$VERSION" >> $CONFIG_FILE
@@ -219,46 +221,13 @@ fi
 echo "indentified $IDENTB" >> $LOG_FILE
 
 ###################################################################################################
-#	set the default editor for .ngc files
-#
-sudo cp -f .freedesktop.org.xml /usr/share/mime/packages/freedesktop.org.xml
-sudo update-mime-database /usr/share/mime
-
-echo "setting default editor for .ngc files" >> $LOG_FILE
-
-
-###################################################################################################
-# 	Step 1: prompt for the order number
-#	 	we will use the order number to create a local database of config files
-#		we can also encode a license mechanism here
-#
-echo "prompt for order number" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Enter Order Number:"
-read ORDER_NO
-echo "ORDER_NO=$ORDER_NO" >> $LOG_FILE
-echo "ORDER_NO=$ORDER_NO" >> $CONFIG_FILE
-
-if [ $ORDER_NO -eq 666 ]
-then
-	FACTORY=1
-else
-	FACTORY=0
-fi
-
-if [ $FACTORY -eq 1 ]
-then
-	clear; echo "FACTORY INSTALL"; sleep 1;
-	echo "FACTORY INSTALL" >> $LOG_FILE
-else
-	FACTORY=0
-fi
-
-
-###################################################################################################
 #	misc setup stuff
 #
+# set the default editor for .ngc files
+sudo cp -f .freedesktop.org.xml /usr/share/mime/packages/freedesktop.org.xml
+sudo update-mime-database /usr/share/mime
+echo "setting default editor for .ngc files" >> $LOG_FILE
+
 # remove the desktop icon
 rm -Rf /home/probotix/Desktop/*.desktop
 
@@ -290,53 +259,21 @@ ln -sf /home/probotix/linuxcnc/nc_files/ /home/probotix/Desktop/nc_files
 SCREEN_WIDTH=$(xrandr --current | grep '*' | uniq | awk '{print $1}' | cut -d 'x' -f1)
 cp -f .$SCREEN_WIDTH*probotix_background.png /home/probotix/Pictures/.background.png
 gconftool-2 -t string -s /desktop/gnome/background/picture_filename /home/probotix/Pictures/.background.png
+echo "set desktop background" >> $LOG_FILE
 echo "SCREEN_WIDTH=$SCREEN_WIDTH" >> $CONFIG_FILE
 
 # turn off the screen-saver and idle login
 gconftool-2 --type bool --set /apps/gnome-screensaver/lock_enabled 0
 gconftool-2 --type bool --set /apps/gnome-screensaver/idle_activation_enabled 0
+echo "disable screen-saver/idle login" >> $LOG_FILE
 
 # turn on line numbers in gedit
 gconftool-2 --type bool --set /apps/gedit-2/preferences/editor/line_numbers/display_line_numbers true
+echo "gedit line numbers" >> $LOG_FILE
 
 # remove the update manager so that folks can't break linuxcnc with a software update
 sudo apt-get -qq -y remove update-manager
-echo "misc setup" >> $LOG_FILE
-
-
-###################################################################################################
-#	Step 2: which machine
-#
-clear
-echo "prompt for machine" >> $LOG_FILE
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-#sleep 0.5
-echo "Choose your machine:"
-select x in "V90mk2" "Comet" "Asteroid" "Meteor" "Nebula/MeteorXL" "Custom";
-do
-	case $x in
-		"V90mk2" )
-			MACHINE="V90MK2";
-			break;;
-		"Comet" )
-			MACHINE="COMET";
-			break;;
-		"Asteroid" )
-			MACHINE="ASTEROID";
-			break;;
-		"Meteor" )
-			MACHINE="METEOR";
-			break;;
-		"Nebula/MeteorXL" )
-			MACHINE="NEBULA";
-			break;;
-		"Custom" )
-			MACHINE="CUSTOM";
-			break;;
-	esac
-done
-echo "MACHINE=$MACHINE" >> $LOG_FILE
-echo "MACHINE=$MACHINE" >> $CONFIG_FILE
+echo "remove update-manager" >> $LOG_FILE
 
 # create some temporary files from our skeleton files
 echo "creating temporary files" >> $LOG_FILE
@@ -348,6 +285,85 @@ cp .102.ngc .TEMP102.ngc
 cp .100.ngc .TEMP100.ngc
 cp .emc.var .TEMPemc.var
 
+###################################################################################################
+# 	Step 1: prompt for the order number
+#	 	we will use the order number to create a local database of config files
+#		we can also encode a license mechanism here
+#
+echo "prompt for order number" >> $LOG_FILE
+clear
+echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
+echo "Enter Order Number:"
+read ORDER_NO
+echo "ORDER_NO=$ORDER_NO" >> $LOG_FILE
+echo "ORDER_NO=$ORDER_NO" >> $CONFIG_FILE
+
+if [ $ORDER_NO -eq 666 ]
+then
+	clear
+	echo "FACTORY INSTALL"
+	sleep 1
+	echo "FACTORY INSTALL" >> $LOG_FILE
+fi
+
+###################################################################################################
+#	Step 2: which machine
+#
+clear
+echo "prompt for machine" >> $LOG_FILE
+echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
+echo "Choose your machine:"
+select x in "V90mk2" "Comet" "Asteroid" "Meteor" "Nebula/MeteorXL" "Custom";
+do
+	case $x in
+		"V90mk2" )
+			MACHINE="V90MK2"
+			X_MAX_LIMIT=20.25
+			Y_MAX_LIMIT=12.4
+			break;;
+		"Comet" )
+			MACHINE="COMET"
+			X_MAX_LIMIT=26.125
+			Y_MAX_LIMIT=25.1152
+			break;;
+		"Asteroid" )
+			MACHINE="ASTEROID"
+			X_MAX_LIMIT=37.25
+			Y_MAX_LIMIT=25.1152
+			break;;
+		"Meteor" )
+			MACHINE="METEOR"
+			X_MAX_LIMIT=26.125
+			Y_MAX_LIMIT=52.2
+			break;;
+		"Nebula/MeteorXL" )
+			MACHINE="NEBULA"
+			X_MAX_LIMIT=37.25
+			Y_MAX_LIMIT=52.2
+			break;;
+		"Custom" )
+			MACHINE="CUSTOM"
+			clear
+			echo "prompt for custom x travel" >> $LOG_FILE
+			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
+			echo "Enter X-Axis Max Travel $UNIT_DESC_BIG"
+			read CUSTOM_X_MAX_LIMIT
+			echo "read CUSTOM_X_MAX_LIMIT=$CUSTOM_X_MAX_LIMIT" >> $LOG_FILE
+			clear
+			echo "prompt for custom y travel" >> $LOG_FILE
+			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
+			echo "Enter Y-Axis Max Travel $UNIT_DESC_BIG"
+			read CUSTOM_Y_MAX_LIMIT
+			echo "read CUSTOM_Y_MAX_LIMIT=$CUSTOM_Y_MAX_LIMIT" >> $LOG_FILE
+			# use input values instead of calculated
+			echo "use input values" >> $LOG_FILE
+			X_MAX_LIMIT=$CUSTOM_X_MAX_LIMIT
+			Y_MAX_LIMIT=$CUSTOM_Y_MAX_LIMIT
+			break;;
+	esac
+done
+echo "MACHINE=$MACHINE" >> $LOG_FILE
+echo "MACHINE=$MACHINE" >> $CONFIG_FILE
 
 ###################################################################################################
 #	Step 3: inch or mm
@@ -364,70 +380,87 @@ do
 			I=1
 			UNIT_DESC="(X.XXX in inches)"
 			UNIT_DESC_BIG="(XX.XXX in inches)"
+			REPLACE_RSC="G17 G20 G40 G49 G54 G90 G64 P0.001 T0"
+			REPLACE_INC=".1in .05in .01in .005in .001in"
+			GUNITS="G20"
 			break;;
 		"Metric" )
 			UNITS="mm";
 			I=25.4
 			UNIT_DESC="(XX.XX in mm)"
 			UNIT_DESC_BIG="(XXXX.XX in mm)"
+			REPLACE_RSC="G17 G21 G40 G49 G54 G90 G64 P0.03 T0"
+			REPLACE_INC="10mm 5mm 1mm 0.1mm 0.01mm"
+			GUNITS="G21"
 			break;;
 	esac
 done
 echo "UNITS=$UNITS" >> $LOG_FILE
 echo "UNITS=$UNITS" >> $CONFIG_FILE
 
-case $UNITS in
-	"inch" )
-		REPLACE_RSC="G17 G20 G40 G49 G54 G90 G64 P0.001 T0"
-		REPLACE_INC=".1in .05in .01in .005in .001in"
-		GUNITS="G20"
-		;;
-	"mm" )
-		REPLACE_RSC="G17 G21 G40 G49 G54 G90 G64 P0.03 T0"
-		REPLACE_INC="10mm 5mm 1mm 0.1mm 0.01mm"
-		GUNITS="G21"
-		;;
-esac
+if [ $MACHINE != "CUSTOM" ]
+then
+	# use calculated values to adjust for metric
+	echo "use calculated values" >> $LOG_FILE
+	X_MAX_LIMIT=$(expr "scale=4; $X_MAX_LIMIT*$I" | bc -l)
+	Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT*$I" | bc -l)
+fi
 
+echo "set X_MAX_LIMIT=$X_MAX_LIMIT" >> $LOG_FILE
+echo "set Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
+echo "X_MAX_LIMIT=$X_MAX_LIMIT" >> $CONFIG_FILE
+echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $CONFIG_FILE
+
+# X_PARK is center of X travel
+X_PARK=$(expr "scale=2; $X_MAX_LIMIT/2" | bc -l)
+echo "X_PARK=$X_PARK" >> $LOG_FILE
+# Y_PARK is .1in from max Y
+Y_PARK=$(expr "scale=2; $Y_MAX_LIMIT-(0.1*$I)" | bc -l)
+echo "Y_PARK=$Y_PARK" >> $LOG_FILE
+
+# set Z minimum limit to 5.7 - temporarily disabled
+#ZMINLIM="5.7"
+ZMINLIM="10"
+Z_MIN_LIMIT=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
+echo "Z_MIN_LIMIT=$Z_MIN_LIMIT" >> $LOG_FILE
 
 ###################################################################################################
-#	Step 4: which spindle
+#	set G28 and G30 locations in emc.var
+#
+echo "set G28 and G30 locations in emc.var" >> $LOG_FILE
+sed -i -e 's/REPLACE_X_PARK/'"$X_PARK"'/' .TEMPemc.var
+sed -i -e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMPemc.var
+
+###################################################################################################
+#	Step 4a: which spindle
 #
 clear
 echo "prompt for spindle" >> $LOG_FILE
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-#sleep 0.5
 echo "Choose your spindle:"
 select x in "Router" "VFD Spindle";
 do
 	case $x in
 		"Router" )
 			SPINDLE="ROUTER"
+			# remove spindle speed
+			echo "removing spindle from hal files" >> $LOG_FILE
+			sed -i '/PWM/,+5d' .TEMP.hal
+			sed -i '/SPINDLE/,+16d' .TEMP.hal
+			sed -i '/SPINDLE_SPEED/,+13d' .TEMP.xml
+			sed -i '/VFD/,+3d' .TEMPpostgui.hal
 			break;;
 		"VFD Spindle" )
 			SPINDLE="VFD"
 			ROUTER_MOUNT="LONG"
+			# remove router code
+			echo "removing router controls from hal file" >> $LOG_FILE
+			sed -i '/ROUTER/,+7d' .TEMP.hal
 			break;;
 	esac
 done
 echo "SPINDLE=$SPINDLE" >> $LOG_FILE
 echo "SPINDLE=$SPINDLE" >> $CONFIG_FILE
-
-case $SPINDLE in
-	"ROUTER" )
-		# remove spindle speed
-		echo "removing spindle from hal files" >> $LOG_FILE
-		sed -i '/PWM/,+5d' .TEMP.hal
-		sed -i '/SPINDLE/,+16d' .TEMP.hal
-		sed -i '/SPINDLE_SPEED/,+13d' .TEMP.xml
-		sed -i '/VFD/,+3d' .TEMPpostgui.hal
-		;;
-	"VFD" )
-		echo "removing router controls from hal file" >> $LOG_FILE
-		sed -i '/ROUTER/,+7d' .TEMP.hal
-		;;
-esac
-
 
 ###################################################################################################
 #	Step 4b: which router mount
@@ -461,114 +494,29 @@ then
 		esac
 	done
 	echo "$x" >> $LOG_FILE
-	echo "ROUTER_MOUNT=$ROUTER_MOUNT" >> $LOG_FILE
-	echo "ROUTER_MOUNT=$ROUTER_MOUNT" >> $CONFIG_FILE
 fi
 
+echo "ROUTER_MOUNT=$ROUTER_MOUNT" >> $LOG_FILE
+echo "ROUTER_MOUNT=$ROUTER_MOUNT" >> $CONFIG_FILE
+
 ATLAS_X=$(expr "scale=4; $ATLAS_X*$I" | bc -l)
-echo "ATLAS_X=$ATLAS_X" >> $LOG_FILE
 ATLAS_Y=$(expr "scale=4; $ATLAS_Y*$I" | bc -l)
+echo "ATLAS_X=$ATLAS_X" >> $LOG_FILE
 echo "ATLAS_Y=$ATLAS_Y" >> $LOG_FILE
 
-
 ###################################################################################################
-# hardcode ATLaS offset in 100.ngc
+#	ATLaS settings
 #
+# hardcode ATLaS offset in 100.ngc
 echo "hard code ATLaS offset in 100.ngc" >> $LOG_FILE
 sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMP100.ngc
 sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMP100.ngc
-
 sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .nc_files/utilities/table_extents.ngc
 
-###################################################################################################
 # set G59.3 offset to center of ATLaS
-#
 echo "set G59.3 offset to center of ATLaS" >> $LOG_FILE
 sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMPemc.var
 sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMPemc.var
-
-
-###################################################################################################
-#	Step 4c: custom machine travel
-#
-if [ $MACHINE = "CUSTOM" ]
-then
-	clear
-	echo "prompt for custom x travel" >> $LOG_FILE
-	echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-	echo "Enter X-Axis Max Travel $UNIT_DESC_BIG"
-	read CUSTOM_X_MAX_LIMIT
-	echo "read CUSTOM_X_MAX_LIMIT=$CUSTOM_X_MAX_LIMIT" >> $LOG_FILE
-	clear
-	echo "prompt for custom y travel" >> $LOG_FILE
-	echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-	echo "Enter Y-Axis Max Travel $UNIT_DESC_BIG"
-	read CUSTOM_Y_MAX_LIMIT
-	echo "read CUSTOM_Y_MAX_LIMIT=$CUSTOM_Y_MAX_LIMIT" >> $LOG_FILE
-fi
-
-case $MACHINE in
-	"V90MK2" )
-		X_MAX_LIMIT=20.25
-		Y_MAX_LIMIT=12.4
-		;;
-	"COMET" )
-		X_MAX_LIMIT=26.125
-		Y_MAX_LIMIT=25.1152
-		;;
-	"ASTEROID" )
-		X_MAX_LIMIT=37.25
-		Y_MAX_LIMIT=25.1152
-		;;
-	"METEOR" )
-		X_MAX_LIMIT=26.125
-		Y_MAX_LIMIT=52.2
-		;;
-	"NEBULA" )
-		X_MAX_LIMIT=37.25
-		Y_MAX_LIMIT=52.2
-		;;
-esac
-
-if [ $MACHINE = "CUSTOM" ]
-then
-	# if custom machine, use input values instead of calculated
-	echo "use input values" >> $LOG_FILE
-	X_MAX_LIMIT=$CUSTOM_X_MAX_LIMIT
-	Y_MAX_LIMIT=$CUSTOM_Y_MAX_LIMIT
-else
-	# otherwise use calculated values to adjust for metric
-	echo "use calculated values" >> $LOG_FILE
-	X_MAX_LIMIT=$(expr "scale=4; $X_MAX_LIMIT*$I" | bc -l)
-	Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT*$I" | bc -l)
-fi
-
-echo "set X_MAX_LIMIT=$X_MAX_LIMIT" >> $LOG_FILE
-echo "set Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
-echo "X_MAX_LIMIT=$X_MAX_LIMIT" >> $CONFIG_FILE
-echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $CONFIG_FILE
-
-# X_PARK is center of X travel
-X_PARK=$(expr "scale=2; $X_MAX_LIMIT/2" | bc -l)
-echo "X_PARK=$X_PARK" >> $LOG_FILE
-# Y_PARK is .1in from max Y
-Y_PARK=$(expr "scale=2; $Y_MAX_LIMIT-(0.1*$I)" | bc -l)
-echo "Y_PARK=$Y_PARK" >> $LOG_FILE
-
-# set Z minimum limit to 5.7 - temporarily disabled
-#ZMINLIM="5.7"
-ZMINLIM="10"
-Z_MIN_LIMIT=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
-echo "Z_MIN_LIMIT=$Z_MIN_LIMIT" >> $LOG_FILE
-
-
-###################################################################################################
-#	set G28 and G30 locations in emc.var
-#
-echo "set G28 and G30 locations in emc.var" >> $LOG_FILE
-sed -i -e 's/REPLACE_X_PARK/'"$X_PARK"'/' .TEMPemc.var
-sed -i -e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMPemc.var
-
 
 ###################################################################################################
 #	Step 5: which ACME screw
@@ -576,37 +524,29 @@ sed -i -e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMPemc.var
 clear
 echo "prompt for acme" >> $LOG_FILE
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-#sleep 0.5
 echo "Choose your ACME screw:"
 select x in "Roton" "Helix";
 do
 	case $x in
 		"Roton" )
-			ACME="ROTON";
+			ACME="ROTON"
+			ZTPI=5
+			Z_MAXVEL=0.4
+			# 24IPM Z-Axis
 			break;;
 		"Helix" )
-			ACME="HELIX";
+			ACME="HELIX"
+			ZTPI=2
+			Z_MAXVEL=2
+			# 120IPM Z-Axis
 			break;;
 	esac
 done
 echo "ACME=$ACME" >> $LOG_FILE
 echo "ACME=$ACME" >> $CONFIG_FILE
 
-case $ACME in
-	"ROTON" )
-		ZTPI=5
-		Z_MAXVEL=0.4
-		# 24IPM Z-Axis
-		;;
-	"HELIX" )
-		ZTPI=2
-		Z_MAXVEL=2
-		# 120IPM Z-Axis
-		;;
-esac
 echo "replace z max velocity in ini file" >> $LOG_FILE
 sed -i -e 's/REPLACE_ZVELOCITY/'"Z_MAXVEL"'/' .TEMP.ini
-
 
 ###################################################################################################
 #	Step 6: which drivers (unipolar or bipolar)
@@ -614,35 +554,27 @@ sed -i -e 's/REPLACE_ZVELOCITY/'"Z_MAXVEL"'/' .TEMP.ini
 clear
 echo "prompt for drivers" >> $LOG_FILE
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-#sleep 0.5
 echo "Choose your drivers:"
 select x in "ProboStep" "MondoStep";
 do
 	case $x in
 		"ProboStep" )
 			DRIVERS="PROBOSTEP";
+			XYSCALE=$(expr "scale=4; 2*200*2/$I" | bc -l)
+			ZSCALE=$(expr "scale=4; 2*200*$ZTPI/$I" | bc -l)
 			break;;
 		"MondoStep" )
 			DRIVERS="MONDOSTEP";
+			XYSCALE=$(expr "scale=4; 4*200*2/$I" | bc -l)
+			ZSCALE=$(expr "scale=4; 4*200*$ZTPI/$I" | bc -l)
 			break;;
 	esac
 done
 echo "DRIVERS=$DRIVERS" >> $LOG_FILE
 echo "DRIVERS=$DRIVERS" >> $CONFIG_FILE
 
-case $DRIVERS in
-	"PROBOSTEP" )
-		XYSCALE=$(expr "scale=4; 2*200*2/$I" | bc -l)
-		ZSCALE=$(expr "scale=4; 2*200*$ZTPI/$I" | bc -l)
-		;;
-	"MONDOSTEP" )
-		XYSCALE=$(expr "scale=4; 4*200*2/$I" | bc -l)
-		ZSCALE=$(expr "scale=4; 4*200*$ZTPI/$I" | bc -l)
-		;;
-esac
 echo "XYSCALE=$XYSCALE" >> $LOG_FILE
 echo "ZSCALE=$ZSCALE" >> $LOG_FILE
-
 
 ###################################################################################################
 #	Step 7: gamepad or mpg pendant?
@@ -656,40 +588,31 @@ do
 	case $x in
 		"GamePad" )
 			PENDANT="GAMEPAD"
+			# remove mpg pendant from hal file
+			echo "remove mpg from hal file" >> $LOG_FILE
+			sed -i '/MPG_PENDANT/,+59d' .TEMP.hal
 			break;;
 		"MPG Pendant" )
 			PENDANT="MPG"
+			# remove gamepad from hal file
+			echo "remove gamepad from hal files" >> $LOG_FILE
+			sed -i '/GAMEPAD/,+1d' .TEMP.hal
+			sed -i '/GAMEPAD/,+31d' .TEMPpostgui.hal
 			break;;
 		"None" )
 			PENDANT="NONE"
+			# remove mpg pendant from hal file
+			echo "remove mpg from hal file" >> $LOG_FILE
+			sed -i '/MPG_PENDANT/,+59d' .TEMP.hal
+			# remove gamepad from hal file
+			echo "remove gamepad from hal files" >> $LOG_FILE
+			sed -i '/GAMEPAD/,+1d' .TEMP.hal
+			sed -i '/GAMEPAD/,+31d' .TEMPpostgui.hal
 			break;;
 	esac
 done
 echo "PENDANT=$PENDANT" >> $LOG_FILE
 echo "PENDANT=$PENDANT" >> $CONFIG_FILE
-
-case $PENDANT in
-	"GAMEPAD" )
-		# remove mpg pendant from hal file
-		echo "remove mpg from hal file" >> $LOG_FILE
-		sed -i '/MPG_PENDANT/,+59d' .TEMP.hal
-		;;
-	"MPG" )
-		# remove gamepad from hal file
-		echo "remove gamepad from hal file" >> $LOG_FILE
-		sed -i '/GAMEPAD/,+1d' .TEMP.hal
-		sed -i '/GAMEPAD/,+31d' .TEMPpostgui.hal
-		;;
-	"NONE" )
-		# remove mpg pendant from hal file
-		sed -i '/MPG_PENDANT/,+59d' .TEMP.hal
-		# remove gamepad from hal file
-		echo "remove gamepad from hal file" >> $LOG_FILE
-		sed -i '/GAMEPAD/,+1d' .TEMP.hal
-		sed -i '/GAMEPAD/,+31d' .TEMPpostgui.hal
-		;;
-esac
-
 
 ###################################################################################################
 #	Step 8: confirm parallel port addresses, or enter custom
@@ -718,6 +641,7 @@ do
 			break;;
 	esac
 done
+echo "$x" >> $LOG_FILE
 
 if [ $PENDANT = "MPG" ]
 then
@@ -756,15 +680,15 @@ else
 	sed -i '/ESTOP_2/,+9d' .TEMP.hal
 fi
 
-
 ###################################################################################################
 #	Step 9: option selection
 #
+ZPUCK="NONE"
 clear
 echo "prompt for options" >> $LOG_FILE
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 echo "Do you use the ATLaS Tool Length Sensor or the Z-Puck?"
-select x in "ATLaS only" "Z-Puck only" "Both" "Swap Parallel Ports" "None";
+select x in "ATLaS only" "Z-Puck only" "Both" "None" "Swap Parallel Ports";
 do
 	case $x in
 		"ATLaS only" )
@@ -843,13 +767,11 @@ sed -i -e 's/PARPORT0/'"$PARPORT0"'/' \
 	-e 's/PARPORT1/'"$PARPORT1"'/' \
 	-e 's/PARPORT2/'"$PARPORT2"'/' .TEMP.hal
 
-
 ###################################################################################################
 #	Step 10: rotary?
 #
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-#sleep 0.5
 echo "Do you have the rotary axis?"
 select xa in "Yes" "No";
 do
@@ -872,8 +794,7 @@ do
 			break;;
 	esac
 done
-#echo "COORDINATES=$COORDINATES" >> $CONFIG_FILE
-
+echo "COORDINATES=$COORDINATES" >> $CONFIG_FILE
 
 ###################################################################################################
 #	Step 11: driver swap
@@ -888,10 +809,8 @@ ZSTEP="06"
 ZDIR="07"
 ASTEP="17"
 ADIR="01"
-
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-#sleep 0.5
 echo "Do you want to swap a motor to the A-axis output?"
 select x in "X" "Y1" "Y2" "Z" "No";
 do
@@ -902,39 +821,30 @@ do
 			COORDINATES="X Y Z";
 			COORDINATES_="X\ Y\ Z";
 			AXES="3";
-			# remove a-axis from ini file
-			sed -i '/AXIS_3/,+10d' .TEMP.ini
-			# remove a-axis from hal file
-			sed -i '/A-AXIS/,+13d' .TEMP.hal
-			break;;
+			# continue matching
+			;;&
 		"Y1" )
 			Y1STEP="17"
 			Y1DIR="01"
 			COORDINATES="X Y Z";
 			COORDINATES_="X\ Y\ Z";
 			AXES="3";
-			# remove a-axis from ini file
-			sed -i '/AXIS_3/,+10d' .TEMP.ini
-			# remove a-axis from hal file
-			sed -i '/A-AXIS/,+13d' .TEMP.hal
-			break;;
+			;;&
 		"Y2" )
 			Y2STEP="17"
 			Y2DIR="01"
 			COORDINATES="X Y Z";
 			COORDINATES_="X\ Y\ Z";
 			AXES="3";
-			# remove a-axis from ini file
-			sed -i '/AXIS_3/,+10d' .TEMP.ini
-			# remove a-axis from hal file
-			sed -i '/A-AXIS/,+13d' .TEMP.hal
-			break;;
+			;;&
 		"Z" )
 			ZSTEP="17"
 			ZDIR="01"
 			COORDINATES="X Y Z";
 			COORDINATES_="X\ Y\ Z";
 			AXES="3";
+			;;&
+		"X" | "Y1" | "Y2" | "Z" )
 			# remove a-axis from ini file
 			sed -i '/AXIS_3/,+10d' .TEMP.ini
 			# remove a-axis from hal file
@@ -958,13 +868,11 @@ sed -i -e "s/XSTEP/$XSTEP/" \
 	-e "s/ASTEP/$ASTEP/" \
 	-e "s/ADIR/$ADIR/" .TEMP.hal
 
-
 ###################################################################################################
 #	Step 12: soft limits only
 #
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-#sleep 0.5
 echo "Do you want to use soft limits only?"
 select x in "Yes" "No";
 do
@@ -981,6 +889,7 @@ echo "SOFT_ONLY=$x" >> $CONFIG_FILE
 
 # metricify some additional axis vars
 # floating point math is hoaky in bash, must us bc (bash calculator)
+# a-axis is in degrees, so no metrification necessary
 XY_MAXVEL=$(expr 3.34*$I | bc -l)
 Z_MAXVEL=$(expr $Z_MAXVEL*$I | bc -l)
 XY_MAXACCEL=$(expr 6*$I | bc -l)
@@ -1000,20 +909,17 @@ DEFAULT_VELOCITY=$(expr 3.34*$I | bc -l)
 MAX_LINEAR_VELOCITY=$(expr 3.34*$I | bc -l)
 
 clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 echo "ORDER_NO    =" $ORDER_NO >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "MACHINE     =" $MACHINE >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "UNITS       =" $UNITS >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "ACME        =" $ACME >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "DRIVERS     =" $DRIVERS >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "SPINDLE     =" $SPINDLE >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
-echo "PENDANT     =" $GAMEPAD >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
+echo "PENDANT     =" $PENDANT >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "SENSOR      =" $SENSOR >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "AXES        =" $AXES >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "COORDINATES =" $COORDINATES >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "ZPUCK       =" $ZPUCK >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
-echo "XYSCALE     =" $XYSCALE >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
-echo "ZSCALE      =" $ZSCALE >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "ZTPI        =" $ZTPI >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "PARPORT0    =" $PARPORT0 >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 echo "PARPORT1    =" $PARPORT1 >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
@@ -1043,10 +949,6 @@ echo "MAX_LIN_VEL =" $MAX_LINEAR_VELOCITY >> .CONFIGS/CONFIG_DUMP-.$ORDER_NO
 FERROR=$(expr 0.08*$I | bc -l)
 # was 0.05
 MIN_FERROR=$(expr 0.05*$I | bc -l)
-
-# a-axis is in degrees, so no metrification necessary
-
-#sleep 100
 
 # replace vars in ini file - single + double quote to expand vars and escape spaces
 sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' \
@@ -1081,12 +983,16 @@ sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' \
 	-e 's/REPLACE_X_PARK/'"$X_PARK"'/' \
 	-e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMP.ini
 
+###################################################################################################
+#	Save the TEMP files
+#
 # create icon
-YEAR=`date +%Y`
+YEAR=$(date +%Y)
 cp .icon.desktop .TEMP.desktop
 sed -i -e 's/REPLACE_MACHINE/'"$MACHINE $YEAR"'/' .TEMP.desktop
 cp .TEMP.desktop /home/probotix/Desktop/$MACHINE.desktop
 
+# move the temp files to LinuxCNC dir
 cp .TEMP.ini /home/probotix/linuxcnc/configs/PROBOTIX/probotix.ini
 cp .TEMP.hal /home/probotix/linuxcnc/configs/PROBOTIX/probotix.hal
 cp .TEMPpostgui.hal /home/probotix/linuxcnc/configs/PROBOTIX/postgui.hal
@@ -1097,58 +1003,12 @@ cp .TEMPemc.var  /home/probotix/linuxcnc/configs/PROBOTIX/emc.var
 cp .TEMP102.ngc /home/probotix/linuxcnc/nc_files/subs/102.ngc
 cp .TEMP100.ngc /home/probotix/linuxcnc/nc_files/subs/100.ngc
 
+# remove remaining temp files
 rm -f .TEMP*
 
-# To download a package and its dependencies
-# sudo apt-get -d install packagename
-# packages are downloaded to /var/cache/apt/archives
-# To install a downloaded package
-# sudo dpkg -i packagename.deb
-# To remove a package
-# sudo dpkg -r packagename
-# To Reconfigure/Repair an installed package
-# sudo dpkg-reconfigure packagename
-# To check whether a package is install
-# sudo dpkg -S packagename
-
-# install glade
-# sudo apt-get -d install glade-gtk2
-
-#need to figure out how to capture errors here
-#cd .edimax_7811Un_driver/
-#sudo insmod 8192cu.ko
-# kernel modules are kept here: /lib/modules/2.6.32-122-rtai/kernel/drivers/net/
-#sudo install -p -m 644 8192cu.ko /lib/modules/*/kernel/drivers/net/
-#cd ..
-#sudo -s 'echo 8192cu >> /etc/modules'
-#sudo -s 'echo "blacklist rtl8192cu" >> /etc/modprobe.d/blacklist.conf'
-#sudo update-initramfs -u
-
-#sudo apt-get install php5-dev
-#tar -xvzf tk-0.1.1.tgz
-#cd tk-0.1.1/
-#phpize
-#./configure
-#make
-#make install
-
-#sudo apt-get install libc6 libc6-dev libc6-dbg
-#sudo apt-get upgrade
-#./SheetCam_setupV6.1.23-32
-
-#mkdir /home/probotix/linuxcnc/python/
-#cd /home/probotix/linuxcnc/python/
-#cp /media/ZEUS/.python/stdglue.py .
-#echo 'from stdglue import *' > remap.py
-#echo 'import remap' > toplevel.py
-#chmod +x *.py
-
-#rm -f /etc/apt/sources.list.d/linuxcnc-buildbot.list
-#echo "deb     http://buildbot.linuxcnc.org/ lucid 2.7-rt" >> /etc/apt/sources.list.d/linuxcnc-buildbot.list
-#echo "deb-src http://buildbot.linuxcnc.org/ lucid 2.7-rt" >> /etc/apt/sources.list.d/linuxcnc-buildbot.list
-#sudo apt-key adv --keyserver hkp://keys.gnupg.net --recv-key E0EE663E
-#sudo apt-get dist-upgrade
-
+###################################################################################################
+#	End
+#
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 echo "Configuration Complete"
@@ -1158,7 +1018,7 @@ then
 else
 	echo "No need to reboot. Restart LinuxCNC to apply changes."
 fi
-echo " "
+echo
 echo "This window will close in 10 seconds"
 
 sleep 10
