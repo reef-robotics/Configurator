@@ -1,0 +1,8 @@
+
+[Desktop Entry]
+Name=REPLACE_MACHINE
+Exec=/usr/bin/linuxcnc '/home/probotix/linuxcnc/configs/PROBOTIX/probotix.ini'
+Type=Application
+Comment=
+Icon=linuxcncicon
+Name[en_US]=REPLACE_MACHINE

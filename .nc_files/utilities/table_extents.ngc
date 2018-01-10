@@ -1,0 +1,97 @@
+%
+(Threaded Inserts)
+(This file needs to be modified to match your machine travel)
+(1/16" end mill)
+
+(touch off G54 Z to top of spoil board!!!)
+(other coordinate systems will pull z offset from #5223)
+(no need to touch off X & Y)
+
+
+G59.3 G20 G40 G49 G90 G17 G0
+G64 P0.01
+
+
+
+#1 = 50 (Y length)
+#2 = 24 (X width)
+#3 = 1  (increments)
+#4 = -0.03 (depth)
+#5 = 0.1 (z safe)
+#6 = [#5223] (5223 is G54 Z offset)
+
+G10 L2 P9 X-0.075 Y3.5533 Z[#]6	(G59.3 used for arc around tool sensor)
+(G10 L2 P1 X1.5 Y0.5 )
+G10 L2 P8 X1.5 Y0.5 Z[#6] (G59.2 will be used for grid)
+
+
+G0 X0 Y0
+G1 Z1 F10
+G4 P4
+
+G53 G0 X0 Y0
+M3 S24000
+
+
+G59.3 X0
+G1 Z#4 F10
+G53 G1 X[#2 +2]F200
+G53 Y[#1+1]
+G59.3 X0
+Y0.875
+G2 Y-0.875 J-0.875
+G53 G1 Y0
+G0 Z#5
+
+G59.2 G90 G0 X0 Y0
+G64 P0.010
+
+(cut perimeter)
+G1 Z[#4] F10
+G1 Y[#1] F200
+X[#2]
+Y0
+X0
+Z[#5]
+
+#11 = #3 (X)
+#12 = #3 (Y)
+
+
+(cut front to back)
+o101 while [#11 LT #2]
+  G0 X[#11] Y0
+  G1 Z[#4] F10
+  G1 Y[#1] F200
+  G0 Z[#5]
+  #11 = [#11+#3]
+  G0 X[#11]
+  G1 Z[#4] F10
+  G1 Y[0] F200
+  G0 Z[#5]
+  #11 = [#11+#3]
+o101 endwhile
+
+#11 = 0
+
+(cut right to left)
+o102 while [#12 LT #1]
+  G0 X0 Y[#12]
+  G1 Z[#4] F10
+  G1 X[#2] F200
+  G0 Z[#5]
+  #12 = [#12+#3]
+  G0 Y[#12]
+  G1 Z[#4] F10
+  G1 X[0] F200
+  G0 Z[#5]
+  #12 = [#12+#3]
+o102 endwhile
+
+Z#5
+
+M5 M9
+G53 G0 Z0
+G53 X0 Y0
+M30
+%

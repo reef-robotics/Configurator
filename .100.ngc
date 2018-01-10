@@ -1,0 +1,33 @@
+o100 SUB
+
+#<_ATLAS_X> = REPLACE_ATLAS_X
+#<_ATLAS_Y> = REPLACE_ATLAS_Y
+#<_MULTIPLIER> = REPLACE_MULTIPLIER
+#<_Z_MIN> = REPLACE_ZMIN
+
+						(#5400 is current tool number)
+						(#1 must be passed as tool number)
+
+M5 M9						(turn off spindle and shop vac)
+REPLACE_GUNITS					(set units)
+G53 G90 G0 Z0 					(retract z)
+
+o101 if [#1 NE #5400] 				(if tool number has changed)
+G53 G0 XREPLACE_X_PARK Y0			(drive out to front of machine)
+T#1 M6 						(tool change prompt)
+o101 endif
+
+G53 G0 X#<_ATLAS_X> Y#<_ATLAS_Y>		(move over tool sensor)
+G91 G38.2 Z-#<_Z_MIN> F[10 * #<_MULTIPLIER>]	(feed down until probe is active)
+G10 L11 P#1 Z0 R0				(set tool table)
+G53 G90 G0 Z0				(retract most of the way up)
+G43 
+G91 X[2 * #<_MULTIPLIER>]			(move over 2 inches to right)
+G90						(jump back into absolute mode)
+o100 ENDSUB
+
+
+
+
+
+

@@ -1,0 +1,390 @@
+# Probotix HAL Configuration
+
+loadrt trivkins
+loadrt [EMCMOT]EMCMOT base_period_nsec=[EMCMOT]BASE_PERIOD servo_period_nsec=[EMCMOT]SERVO_PERIOD traj_period_nsec=[EMCMOT]SERVO_PERIOD key=[EMCMOT]SHMEM_KEY num_joints=[TRAJ]AXES
+#loadrt probe_parport
+loadrt hal_parport cfg="PARPORT0 PARPORT1PARPORT2"
+setp parport.0.reset-time 5000
+setp parport.1.reset-time 5000
+loadrt stepgen step_type=0,0,0,0
+
+# GAMEPAD
+loadusr -W hal_input -KRAL X-Box 
+
+loadrt flipflop count=3
+loadrt edge count=1
+addf edge.0 base-thread
+addf flipflop.0 base-thread
+addf flipflop.1 base-thread
+addf flipflop.2 base-thread
+
+# load the module for the tandem motor logic
+loadrt and2 count=9
+loadrt or2 count=7 
+loadrt not count=6 
+loadrt mux4 count=2
+loadrt debounce cfg=2,3,2,4
+
+
+
+# PWM
+loadrt abs count=1
+loadrt pwmgen output_type=0
+addf pwmgen.update servo-thread
+addf pwmgen.make-pulses base-thread
+addf abs.0 servo-thread
+
+
+
+
+# add the module to the necessary threads
+addf and2.0 base-thread  
+addf and2.1 base-thread 
+addf and2.2 base-thread
+addf and2.3 base-thread 
+addf and2.4 base-thread 
+addf and2.5 base-thread 
+addf and2.6 base-thread
+addf and2.7 base-thread  
+addf or2.0 base-thread
+addf or2.1 base-thread
+addf or2.2 base-thread
+addf or2.5 base-thread
+addf or2.6 base-thread
+addf not.0 base-thread
+addf not.1 base-thread
+addf not.2 base-thread
+addf not.3 base-thread
+addf not.4 base-thread
+addf debounce.0 base-thread
+addf debounce.1 base-thread
+addf debounce.2 base-thread
+addf debounce.3 base-thread
+
+addf parport.0.read base-thread
+addf stepgen.make-pulses base-thread
+addf parport.0.write base-thread
+addf parport.0.reset base-thread
+
+addf parport.1.read base-thread
+addf parport.1.write base-thread
+addf parport.1.reset base-thread
+
+#PARPORT2x
+addf parport.2.read base-thread
+addf parport.2.write base-thread
+addf parport.2.reset base-thread
+
+addf stepgen.capture-position servo-thread
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+addf stepgen.update-freq servo-thread
+
+
+# set up the axis parameters and create the axis signals
+
+# X-AXIS
+setp stepgen.0.position-scale [AXIS_0]SCALE
+setp stepgen.0.steplen 1
+setp stepgen.0.stepspace 0
+setp stepgen.0.dirhold 35000
+setp stepgen.0.dirsetup 35000
+setp stepgen.0.maxaccel [AXIS_0]STEPGEN_MAXACCEL
+net xpos-cmd axis.0.motor-pos-cmd => stepgen.0.position-cmd
+net xpos-fb stepgen.0.position-fb => axis.0.motor-pos-fb
+net xstep <= stepgen.0.step
+net xdir <= stepgen.0.dir
+net xenable axis.0.amp-enable-out => stepgen.0.enable
+net xstep 	=> parport.0.pin-XSTEP-out
+net xdir 	=> parport.0.pin-XDIR-out
+
+# Y-AXIS
+setp stepgen.1.position-scale [AXIS_1]SCALE
+setp stepgen.1.steplen 1
+setp stepgen.1.stepspace 0
+setp stepgen.1.dirhold 35000
+setp stepgen.1.dirsetup 35000
+setp stepgen.1.maxaccel [AXIS_1]STEPGEN_MAXACCEL
+net ypos-cmd axis.1.motor-pos-cmd => stepgen.1.position-cmd
+net ypos-fb stepgen.1.position-fb => axis.1.motor-pos-fb
+net ystep <= stepgen.1.step
+net ydir <= stepgen.1.dir
+net yenable axis.1.amp-enable-out => stepgen.1.enable
+net ystep1 	=> parport.0.pin-Y1STEP-out 
+net ystep2 	=> parport.0.pin-Y2STEP-out
+net ydir 	=> parport.0.pin-Y1DIR-out 
+net ydir 	=> parport.0.pin-Y2DIR-out
+
+# Z-AXIS
+setp stepgen.2.position-scale [AXIS_2]SCALE
+setp stepgen.2.steplen 1
+setp stepgen.2.stepspace 0
+setp stepgen.2.dirhold 35000
+setp stepgen.2.dirsetup 35000
+setp stepgen.2.maxaccel [AXIS_2]STEPGEN_MAXACCEL
+net zpos-cmd axis.2.motor-pos-cmd => stepgen.2.position-cmd
+net zpos-fb stepgen.2.position-fb => axis.2.motor-pos-fb
+net zstep <= stepgen.2.step
+net zdir <= stepgen.2.dir
+net zenable axis.2.amp-enable-out => stepgen.2.enable
+net zstep 	=> parport.0.pin-ZSTEP-out
+net zdir 	=> parport.0.pin-ZDIR-out
+
+# A-AXIS
+setp stepgen.3.position-scale [AXIS_3]SCALE
+setp stepgen.3.steplen 1
+setp stepgen.3.stepspace 0
+setp stepgen.3.dirhold 35000
+setp stepgen.3.dirsetup 35000
+setp stepgen.3.maxaccel [AXIS_3]STEPGEN_MAXACCEL
+net apos-cmd axis.3.motor-pos-cmd => stepgen.3.position-cmd
+net apos-fb stepgen.3.position-fb => axis.3.motor-pos-fb
+net astep <= stepgen.3.step
+net adir <= stepgen.3.dir
+net aenable axis.3.amp-enable-out => stepgen.3.enable
+net astep 	=> parport.0.pin-ASTEP-out
+net adir 	=> parport.0.pin-ADIR-out
+
+# PROBE
+# set up the probe input for the tool sensor and the z-puck
+# the tool sensor is normally closed, the z-puck is normally open
+# we will put them on two seperate pins and 'or' the two signals together
+setp debounce.2.delay 100
+net deb2.0 debounce.2.0.in <= parport.1.pin-15-in
+net deb2.1 debounce.2.1.in <= parport.1.pin-13-in-not
+net tool_length_in or2.6.in0 <= debounce.2.0.out
+net z_probe_in or2.6.in1 <= debounce.2.1.out
+net probe-in motion.probe-input <= or2.6.out
+
+
+# set all of the step signals to reset
+setp parport.0.pin-02-out-reset 1
+setp parport.0.pin-04-out-reset 1
+setp parport.0.pin-06-out-reset 1
+setp parport.0.pin-08-out-reset 1
+setp parport.0.pin-17-out-reset 1
+
+# invert a the direction signals
+setp parport.0.pin-03-out-invert 1
+setp parport.0.pin-05-out-invert 1
+setp parport.0.pin-07-out-invert 1
+setp parport.0.pin-09-out-invert 1
+setp parport.0.pin-01-out-invert 1
+
+# debounce the y-axis switches and connect them to signals
+net switches-y1-raw	<= parport.0.pin-11-in
+net switches-y1-raw 	=> debounce.0.0.in 
+net switches-y1 	<= debounce.0.0.out
+net switches-y2-raw   	<= parport.0.pin-12-in
+net switches-y2-raw 	=> debounce.0.1.in 
+net switches-y2 	<= debounce.0.1.out
+setp debounce.0.delay 10
+
+# join the home switch signals so that both switches have to be closed to trigger a home position
+net switches-y1		=> and2.0.in0
+net switches-y2		=> and2.0.in1
+net home-y 		<= and2.0.out
+net home-y 		=> axis.1.home-sw-in
+
+# we will need the inverse of the home switch signals for our logic, so run them through not gates
+net switches-y1		=> not.0.in
+net switches-y1-inv 	<= not.0.out
+net switches-y2		=> not.1.in
+net switches-y2-inv 	<= not.1.out
+
+# we will need the inverse of the direction signals for our logic, so run it through a not gate
+net ydir	=> not.2.in
+net ydir-inv	=> not.2.out
+
+# we need to determine if the home switch for each motor is tripped while the direction line is
+# moving the motor towards the switch
+
+# for both y-axis motors, we will prevent the step signal from passing to the motor 
+# if the motor is moving towards the switch and the switch is tripped
+# so "or" the inverted direction signals and the inverted home switches 
+net ydir	=> and2.3.in0
+net switches-y1 => and2.3.in1
+net doh1	<= and2.3.out
+net doh1	=> not.3.in
+net doh1-inv	=> not.3.out
+
+net ydir	=> and2.4.in0
+net switches-y2 => and2.4.in1
+net doh2	<= and2.4.out
+net doh2	=> not.4.in
+net doh2-inv	=> not.4.out	
+
+# if the step generator is trying to send a step (ystep signal) and either the motor is moving 
+# away from the switch or the switch is not tripped, then pass the step signal to the motor
+net ystep 	and2.1.in0
+net doh1-inv	and2.1.in1
+net ystep1 	and2.1.out
+
+net ystep 	and2.2.in0
+net doh2-inv	and2.2.in1
+net ystep2	and2.2.out
+
+
+
+# we are using combined home and limit switches
+# if either switch trips while the homing sequence is not running, then triggered a negative
+# limit switch fault
+net switches-y1 => or2.2.in0
+net switches-y2	=> or2.2.in1
+net limit-y 	<= or2.2.out
+
+# set up the other home and limit switches
+net switches-x-raw   	<= parport.0.pin-10-in
+net switches-x-raw 	=> debounce.1.0.in 
+net switches-x 		<= debounce.1.0.out
+net switches-x 		=> axis.0.home-sw-in
+
+net switches-z-raw 	<= parport.0.pin-13-in
+net switches-z-raw 	=> debounce.1.1.in 
+net switches-z 		<= debounce.1.1.out
+net switches-z 		=> axis.2.home-sw-in
+
+# LIMITS
+net switches-x		=> axis.0.neg-lim-sw-in
+net switches-x		=> axis.0.pos-lim-sw-in
+net limit-y 	        => axis.1.neg-lim-sw-in
+net limit-y 	        => axis.1.pos-lim-sw-in
+net switches-z		=> axis.2.pos-lim-sw-in
+
+setp debounce.1.delay 10
+
+
+
+# ROUTER
+# connect the spindle control to the relay pin
+net spindle-cw => parport.0.pin-14-out
+net spindle-cw <= motion.spindle-forward
+
+# connect the shop vac to the flood coolant signal
+net flood => iocontrol.0.coolant-flood
+net flood => parport.0.pin-16-out
+
+
+
+
+# SPINDLE
+net spindle-cmd <= motion.spindle-speed-out => pwmgen.0.value
+net spindle-enable <= motion.spindle-on => pwmgen.0.enable
+net spindle-pwm <= pwmgen.0.pwm
+setp pwmgen.0.pwm-freq 400000.0
+setp pwmgen.0.scale 240000
+setp pwmgen.0.offset 0.0
+setp pwmgen.0.dither-pwm true
+net spindle-cw <= motion.spindle-forward
+# motion.spindle-forward could be routed to the AUX connector instead of flood
+
+# connect the spindle control to the relay pin
+net spindle-pwm => parport.0.pin-16-out
+
+# connect the shop vac to the flood coolant signal
+net flood => iocontrol.0.coolant-flood
+net flood => parport.0.pin-14-out
+
+
+
+
+
+
+# connect remote switches
+#net switches-start-raw	<= parport.1.pin-10-in-not
+#net switches-start-raw 	=> debounce.3.0.in 
+#net switches-start 	<= debounce.3.0.out
+#net switches-step-raw   <= parport.1.pin-11-in-not
+#net switches-step-raw 	=> debounce.3.1.in 
+#net switches-step 	<= debounce.3.1.out
+#net switches-pause-raw   <= parport.1.pin-12-in-not
+#net switches-pause-raw 	=> debounce.3.2.in 
+#net switches-pause 	<= debounce.3.2.out
+#net switches-stop-raw   <= parport.1.pin-13-in-not
+#net switches-stop-raw 	=> debounce.3.3.in 
+#net switches-stop 	<= debounce.3.3.out
+#setp debounce.3.delay 100
+
+#net x11 or2.5.out => flipflop.0.set 
+#net switches-start =>  or2.5.in0 edge.0.in
+#net x1 halui.mode.is-auto => flipflop.0.reset
+#net x2 flipflop.0.out => halui.mode.auto
+
+#net x3 edge.0.out => and2.6.in0 and2.7.in0
+#net x4 halui.program.is-idle => and2.6.in1
+#net x5 and2.6.out => flipflop.1.set
+#net x6 halui.program.is-running => flipflop.1.reset flipflop.2.reset
+#net x7 flipflop.1.out => halui.program.run
+
+#net x8 halui.program.is-paused => and2.7.in1
+#net x9 and2.7.out => flipflop.2.set
+#net x10 flipflop.2.out halui.program.resume
+
+#net switches-step  => halui.program.step or2.5.in1
+#net switches-pause => halui.program.pause 
+#net switches-stop  => halui.program.stop
+
+# set up the e-stop switch
+net estop-raw <= parport.0.pin-15-in-not
+net estop-raw => debounce.1.2.in
+net estop-ext <= debounce.1.2.out
+net estop-ext => iocontrol.0.emc-enable-in
+net estop-out <= iocontrol.0.user-enable-out
+
+loadusr -W hal_manualtoolchange
+net tool-change iocontrol.0.tool-change => hal_manualtoolchange.change
+net tool-changed iocontrol.0.tool-changed <= hal_manualtoolchange.changed
+net tool-number iocontrol.0.tool-prep-number => hal_manualtoolchange.number
+net tool-prepare-loopback iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
+
+#MPG_PENDANT
+loadrt encoder num_chan=1
+addf encoder.capture-position servo-thread
+addf encoder.update-counters base-thread
+addf mux4.1 servo-thread
+# If your MPG outputs a quadrature signal per click set x4 to 1
+# If your MPG puts out 1 pulse per click set x4 to 0
+setp encoder.0.x4-mode 0
+
+# For velocity mode, set to 1
+# In velocity mode the axis stops when the dial is stopped
+# even if that means the commanded motion is not completed,
+# For position mode (the default), set to 0
+# In position mode the axis will move exactly jog-scale
+# units for each count, regardless of how long that might take,
+setp axis.0.jog-vel-mode 1
+setp axis.1.jog-vel-mode 1
+setp axis.2.jog-vel-mode 1
+setp axis.3.jog-vel-mode 1
+
+# This sets the scale that will be used based on the input to the mux4
+setp mux4.1.in0 0.1
+setp mux4.1.in1 0.01
+setp mux4.1.in2 0.001
+
+# The inputs to the mux4 component
+net scale1 mux4.1.sel0 <= parport.2.pin-09-in
+net scale2 mux4.1.sel1 <= parport.2.pin-10-in
+
+# The output from the mux4 is sent to each axis jog scale
+net mpg-scale <= mux4.1.out
+net mpg-scale => axis.0.jog-scale
+net mpg-scale => axis.1.jog-scale
+net mpg-scale => axis.2.jog-scale
+
+# The MPG inputs
+net mpg-a encoder.0.phase-A <= parport.2.pin-02-in
+net mpg-b encoder.0.phase-B <= parport.2.pin-03-in
+
+# The Axis select inputs
+net mpg-xx axis.0.jog-enable <= parport.2.pin-04-in
+net mpg-yy axis.1.jog-enable <= parport.2.pin-05-in
+net mpg-zz axis.2.jog-enable <= parport.2.pin-06-in
+net mpg-aa axis.3.jog-enable <= parport.2.pin-07-in
+
+# The encoder output counts to the axis. Only the selected axis will move.
+net encoder-counts  <= encoder.0.counts
+net encoder-counts => axis.0.jog-counts
+net encoder-counts => axis.1.jog-counts
+net encoder-counts => axis.2.jog-counts
+net encoder-counts => axis.3.jog-counts

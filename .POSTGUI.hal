@@ -1,0 +1,61 @@
+#VFD
+net spindle-cmd => abs.0.in
+net absolute-spindle-vel <= abs.0.out => pyvcp.spindle-speed
+setp halui.jog-speed 10
+
+#GAMEPAD
+addf or2.3 servo-thread
+addf or2.4 servo-thread
+addf mux4.0 servo-thread
+
+setp mux4.0.in0 0
+setp mux4.0.in1 50
+setp mux4.0.in2 100
+setp mux4.0.in3 150
+
+net remote-speed-slow or2.3.in0 input.0.btn-x
+net remote-speed-medium or2.4.in0 input.0.btn-a
+net remote-speed-fast or2.3.in1 or2.4.in1 input.0.btn-b
+
+net joy-speed-1 mux4.0.sel0 <= or2.3.out
+net joy-speed-2 mux4.0.sel1 <= or2.4.out
+net joy-speed-final halui.jog-speed <= mux4.0.out
+
+net joy-x-jog halui.jog.0.analog <= input.0.abs-x-position
+
+loadrt sum2 count=2
+addf sum2.0 servo-thread
+addf sum2.1 servo-thread
+
+setp sum2.0.gain0 -1
+net reverse-y sum2.0.in0 <= input.0.abs-y-position
+net joy-y-jog halui.jog.1.analog <= sum2.0.out
+
+setp sum2.1.gain0 -1
+net reverse-z sum2.1.in0 <= input.0.abs-ry-position
+net joy-z-jog halui.jog.2.analog <= sum2.1.out
+
+#HALUI_FIRST_TOOL
+net load_t1 pyvcp.o100 halui.mdi-command-00
+
+#HALUI_COMMON
+net btf pyvcp.btf halui.mdi-command-02
+net par pyvcp.par halui.mdi-command-01
+net rtzero pyvcp.rtzero halui.mdi-command-07
+net rthhome pyvcp.rthome halui.mdi-command-06
+#net g64_1 pyvcp.g64_1 halui.mdi-command-08
+#net g64_2 pyvcp.g64_2 halui.mdi-command-09
+#net g64_3 pyvcp.g64_3 halui.mdi-command-10
+net rsc_reset pyvcp.rsc_reset halui.mdi-command-11
+
+#HALUI_ZPUCK
+net z_probe pyvcp.o102 halui.mdi-command-03
+
+#HALUI_XY_ORIGIN
+net xy_touch pyvcp.xy halui.mdi-command-04
+
+#HALUI_ZORIGIN
+net zorigin pyvcp.zorigin halui.mdi-command-05  
+
+#PROBE_LED
+net probe-in => pyvcp.probe-led

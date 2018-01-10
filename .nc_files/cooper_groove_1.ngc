@@ -1,0 +1,118 @@
+%
+(G58 coordinate system)
+(x zero center of rotation)
+(y zero face of chuck)
+(z zero center of rotation)
+
+
+#1 = 0.070 (cut depth)
+#4 = 0.70 (stick diameter)
+
+
+#2 = 0.500
+#3 = 100
+
+
+#5 = 1.5   (start of cuts from face)
+
+#6 = 0.05 (clearance)
+
+G17 G20 G40 G49 G58 G80 G90 G94
+
+G0 Z[[#4/2]+0.2]
+
+M3 S1 (Turn Spindle On) 
+G0 X0.0000 Y#5
+
+G0 X[#2/2]
+Z[[#4/2]-#1]
+G91
+G1 X-[#2] Y[#2] F[#3]
+G0 X-[#6]
+G0 A-90
+G0 X[#6]
+G1 X[#2] Y[#2] F[#3]
+G0 X[#6]
+G0 A90
+G0 X-[#6]
+G1 X-[#2] Y[#2] F[#3]
+G0 X-[#6]
+G0 A-90
+G0 X[#6]
+G1 X[#2] Y[#2] F[#3]
+G0 X[#6]
+G0 A90
+G0 X-[#6]
+G1 X-[#2] Y[#2] F[#3]
+G0 X-[#6]
+G0 A-90
+G0 X[#6]
+G1 X[#2] Y[#2] F[#3]
+G0 X[#6]
+G0 A90
+G0 X-[#6]
+G1 X-[#2] Y[#2] F[#3]
+G0 X-[#6]
+G0 A-90
+G0 X[#6]
+G1 X[#2] Y[#2] F[#3]
+G0 X[#6]
+G0 A90
+G0 X-[#6]
+G1 X-[#2] Y[#2] F[#3]
+G0 X-[#6]
+G0 A-90
+G0 X[#6]
+G1 X[#2] Y[#2] F[#3]
+G0 X[#6]
+
+G0 A-180
+
+G0 X-[#6]
+G1 X-[#2] Y-[#2] F[#3]
+G0 X-[#6]
+G0 A90
+G0 X[#6]
+G1 X[#2] Y-[#2] F[#3]
+G0 X[#6]
+G0 A-90
+G0 X-[#6]
+G1 X-[#2] Y-[#2] F[#3]
+G0 X-[#6]
+G0 A90
+G0 X[#6]
+G1 X[#2] Y-[#2] F[#3]
+G0 X[#6]
+G0 A-90
+G0 X-[#6]
+G1 X-[#2] Y-[#2] F[#3]
+G0 X-[#6]
+G0 A90
+G0 X[#6]
+G1 X[#2] Y-[#2] F[#3]
+G0 X[#6]
+G0 A-90
+G0 X-[#6]
+G1 X-[#2] Y-[#2] F[#3]
+G0 X-[#6]
+G0 A90
+G0 X[#6]
+G1 X[#2] Y-[#2] F[#3]
+G0 X[#6]
+G0 A-90
+G0 X-[#6]
+G1 X-[#2] Y-[#2] F[#3]
+G0 X-[#6]
+G0 A90
+G0 X[#6]
+G1 X[#2] Y-[#2] F[#3]
+
+
+M5
+G0 G90 Z[[#4/2]+0.2]
+X4 Y4 A0
+
+
+M30
+%
+

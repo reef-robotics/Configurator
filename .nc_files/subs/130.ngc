@@ -1,0 +1,14 @@
+(subroutine for interpolating a hole)
+(tool must be greater than the radius of the hole)
+(start in center of hole)
+(usage: o130 CALL [radius] [depth] [feedrate])
+
+o130 SUB
+  G90 Z0.1 			(rapid to Z0.1)
+  G0 Z0 			(rapid to Z0)
+  G91 X[#1]			(move out to diameter)
+  G3 I[-#1] Z-[#2] P[#3] F[#4]	(helix down)
+  G3 I[-#1]			(loop around one time at full depth)
+  G0 X[-#1] 			(back to center)
+  G90 Z0.1			(retract)
+o130 END SUB

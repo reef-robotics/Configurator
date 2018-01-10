@@ -1,0 +1,96 @@
+%
+(Threaded Inserts)
+(This file needs to be modified to match your machine travel)
+(1/8" end mill)
+
+
+G56 G90 G20 G17 G40 G49
+G64 P0.01
+
+G10 L2 P3 X1.5 Y0.5 Z[#5223]	(Grid Offset G56)
+
+(touch off 54 Z to top of spoil board!!!)
+#6 = [#5221] (G54 X offset)
+#7 = [#5222] (G54 Y offset)
+#8 = [#5223] (G54 Z offset)
+#9 = 1.681 (Machine Origin offset X)
+#10 = 4.625(Machine Origin offset Y)
+#13 = -0.075 (Tool Sensor Offset X)
+#14 = 3.5533 (Tool Sensor Offset Y)
+
+
+
+
+#15 = 0.1 (z clear height)
+#16 = .1865 (shoulder radius)
+#17 = [0.05+ #1] (shoulder depth)
+
+#18 = 0.08 (hole radius)
+#19 = 0.7 (hole depth)
+
+#20 = 0  (X counter)
+#21 = 4  (x increment)
+#22 = 5  (y increment)
+#23 = 24 (X maximum)
+#24 = 50 (Y maximum)
+#25 = 0  (Y counter)
+
+
+
+G0 Z1
+G0 X0 Y0
+M3 S24000
+G0 Z0.1
+G4 P4
+
+
+o119 SUB
+  Z0.1
+  (start in center of hole)
+  G91 X#1
+  G3 I[-#1] Z-0.2 P2 F40
+  G3 I[-#1]
+  G0 X[-#1] (back to center)
+  G0 X#2
+  G3 I[-#2] Z-0.7 P6 F40
+  G3 I[-#2]
+  G0 X[-#2] (back to center)
+  G90 Z0.1
+o119 ENDSUB
+
+o120 SUB
+  o137 DO
+    G0 X#1
+    o119 CALL [#4] [#5]
+    G0 G90 X#1
+    #1 = [#1 + #2]
+  o137 WHILE [#1 LT #3 + 1]
+o120 ENDSUB
+
+o121 SUB
+  o138 DO
+    G0 X#1
+    o119 CALL [#4] [#5]
+    G0 G90 X#1
+    #1 = [#1 - #2]
+  o138 WHILE [#1 GT -1]
+o121 ENDSUB
+
+o134 DO
+  #20 = 0
+  G0 G90 Y#25
+  o120 CALL [#20] [#21] [#23] [#16] [#18]
+  #25 = [#25 + #22]
+  o135 IF [#25 LT #24 + 1]
+    #20 = #23
+    G0 G90 Y#25
+    o121 CALL [#20] [#21] [#23] [#16] [#18]
+    #25 = [#25 + #22]
+  o135 ENDIF 
+o134 WHILE [#25 LT #24 + 1]
+
+M5 M9
+G53 G0 Z0
+G53 X0 Y0  
+M30
+%
