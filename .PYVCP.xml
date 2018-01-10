@@ -2,7 +2,7 @@
 <pyvcp>
 <!-- SPINDLE_SPEED -->
 <vbox>
-	<relief>RIDGE</relief>         
+	<relief>RIDGE</relief>
          <bd>4</bd>
 	<label>
 		<text>"Spindle Speed:"</text>
@@ -22,7 +22,7 @@
 	<label>
 		<text>"              PROBE:"</text>
 		<font>("fixed",10)</font>
-	</label> 
+	</label>
 	<led>
 		<halpin>"probe-led"</halpin>
 		<on_color>"blue"</on_color>
@@ -33,7 +33,7 @@
 </hbox>
 <vbox>
     <relief>FLAT</relief>
-    <bd>10</bd>		
+    <bd>10</bd>
 			<button>
      				<halpin>"btf"</halpin>
      				<text>"Bring To Front"</text>
@@ -84,7 +84,7 @@
      		<halpin>"xy"</halpin>
      		<text>"Set X/Y Origin"</text>
      		<font>('fixed',10)</font>
-	</button>			
+	</button>
 </vbox>
 
 
@@ -106,7 +106,7 @@
      		<halpin>"g64_3"</halpin>
      		<text>"G64 P0.040"</text>
      		<font>('fixed',10)</font>
-	</button>			
+	</button>
 </vbox>
 -->
 
@@ -118,6 +118,6 @@
 		<text>"G-code Reset"</text>
      		<font>('fixed',10)</font>
 	</button>
-</vbox>	
+</vbox>
 
 </pyvcp>

@@ -57,5 +57,3 @@ proc load_image { name {img ""}} {
     image create photo $img -format gif -file $file
     return $img
 }
-
-

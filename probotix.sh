@@ -1,6 +1,6 @@
 #!/bin/bash
 # 	PROBOTIX LinuxCNC Configurator
-# 	zip file created Fri Dec 29 13:43:22 CST 2017
+# 	zip file created Thu Jan  4 13:41:19 CST 2018
 #
 # 	Copyright 2016 PROBOTIX
 # 	Written by Len Shelton
@@ -43,20 +43,15 @@
 # 		Discovered 8192cu.ko module installation procedure
 # 		Fixed panel.xml case issue
 #
-# 	Rev1.8.1
-# 		Added YEAR variable to desktop shortcut name
+# 	Rev1.9
 # 		Prompt for which PARPORT to use for pendant and remove unused PARPORT2 if necessary
 # 		Remove second e-stop code if not in use
 # 		Remove references to a-axis if no rotary present
-# 		General code cleanup and unified formatting
-#
-# 	Rev1.8.2
 # 		Added HAL code for a-axis rotation jogging
-#
-# 	Rev1.8.3
 # 		Removed YEAR from shortcut name
 # 		Added prompt for up-rights type/height
 # 		Added prompt for SuperPID
+# 		General code cleanup and unified formatting
 #
 # 	Todo:
 # 		Fix missing NGC startup file causes o100 to not be found
@@ -76,7 +71,7 @@
 # 		Put axis files back in original directories
 #
 #
-_VERSION="1.8.3"
+_VERSION="1.9"
 
 ###################################################################################################
 # 	some variables
@@ -392,19 +387,24 @@ select x in "Short" "Tall";
 do
 	case $x in
 		"Short" )
-			#no change
 			UPRIGHT="SHORT"
+			# set Z minimum limit to 5.7 - temporarily disabled
+			#ZMINLIM="5.7"
+			ZMINLIM="10"
 			break;;
 		"Tall" )
 			UPRIGHT="TALL"
-			#Y_MAX_LIMIT-=1
+			# Y_MAX_LIMIT-=1
 			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
+			# needs to be at least 5.25 when using taller up-rights
+			ZMINLIM="5.25"
 			break;;
 	esac
 done
-echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
+
 echo "UPRIGHT=$UPRIGHT" >> $LOG_FILE
 echo "UPRIGHT=$UPRIGHT" >> $CONFIG_FILE
+echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
 
 ###################################################################################################
 #	Step 4: units (inch or mm)
@@ -458,16 +458,6 @@ echo "X_PARK=$X_PARK" >> $LOG_FILE
 # Y_PARK is .1in from max Y
 Y_PARK=$(expr "scale=2; $Y_MAX_LIMIT-(0.1*$I)" | bc -l)
 echo "Y_PARK=$Y_PARK" >> $LOG_FILE
-
-# needs to be at least 5.25 when using taller up-rights
-ZMINLIM="5.25"
-
-if [ UPRIGHT == "SHORT" ]
-then
-	# set Z minimum limit to 5.7 - temporarily disabled
-	#ZMINLIM="5.7"
-	ZMINLIM="10"
-fi
 
 Z_MIN_LIMIT=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
 echo "Z_MIN_LIMIT=$Z_MIN_LIMIT" >> $LOG_FILE
@@ -665,7 +655,7 @@ do
 			PENDANT="GAMEPAD"
 			# remove mpg pendant from hal file
 			echo "remove mpg from hal file" >> $LOG_FILE
-			sed -i '/MPG_PENDANT/,+59d' .TEMP.hal
+			sed -i '/MPG_PENDANT/,+62d' .TEMP.hal
 			break;;
 		"MPG Pendant" )
 			PENDANT="MPG"
@@ -678,7 +668,7 @@ do
 			PENDANT="NONE"
 			# remove mpg pendant from hal file
 			echo "remove mpg from hal file" >> $LOG_FILE
-			sed -i '/MPG_PENDANT/,+59d' .TEMP.hal
+			sed -i '/MPG_PENDANT/,+62d' .TEMP.hal
 			# remove gamepad from hal file
 			echo "remove gamepad from hal files" >> $LOG_FILE
 			sed -i '/GAMEPAD/,+1d' .TEMP.hal

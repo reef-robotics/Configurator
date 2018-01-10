@@ -21,13 +21,7 @@ G53 G0 X#<_ATLAS_X> Y#<_ATLAS_Y>		(move over tool sensor)
 G91 G38.2 Z-#<_Z_MIN> F[10 * #<_MULTIPLIER>]	(feed down until probe is active)
 G10 L11 P#1 Z0 R0				(set tool table)
 G53 G90 G0 Z0				(retract most of the way up)
-G43 
+G43
 G91 X[2 * #<_MULTIPLIER>]			(move over 2 inches to right)
 G90						(jump back into absolute mode)
 o100 ENDSUB
-
-
-
-
-
-

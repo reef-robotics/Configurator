@@ -9,9 +9,9 @@
 
 	function check_array($array, $string)
 	{
-		foreach ($array as $value) 
+		foreach ($array as $value)
 		{
-    			if(strpos($string,$value)) 
+    			if(strpos($string,$value))
 			{
         			return $value;
     			}
@@ -37,7 +37,7 @@
 	else
 	{
 		$error = "Found $coordinate_system, Changing to G54 Coordinate System";
-		$coordinate_systems_replace = array( "G54", "G54", "G54", "G54", "G54", "G54", "G54", "G54", "G54");	
+		$coordinate_systems_replace = array( "G54", "G54", "G54", "G54", "G54", "G54", "G54", "G54", "G54");
 		$gcode = str_replace($coordinate_systems, $coordinate_systems_replace, $gcode);
 	}
 
@@ -70,7 +70,7 @@
 		$tool_info = "no tools found";
 	}
 	// preamble should be: G17 G20 G40 G49 G54 G90 G64 P0.001 T0
-	
+
  	$gcode = preg_replace('/[A-Z]/', " $0", $gcode);
 	$gcode = str_replace("\r\n ", "\r\n", $gcode);
 

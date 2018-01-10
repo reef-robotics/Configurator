@@ -117,7 +117,7 @@ proc nf_dialog {w title text image default args} {
     }
 
     frame $w.bot
-    frame $w.top 
+    frame $w.top
     if {[llength $args] == 1} {
 	pack $w.bot -side bottom -fill both
     } else {
@@ -163,7 +163,7 @@ proc nf_dialog {w title text image default args} {
     set l [llength $args]
     foreach but $args {
 	button $w.button$i -text $but -command "set tkPriv(button) $i" \
-            -width 10 -height 1 -padx 0 -pady .25 
+            -width 10 -height 1 -padx 0 -pady .25
 
         set u [lindex $accel $i]
 
@@ -208,7 +208,7 @@ proc nf_dialog {w title text image default args} {
     update idletasks
 
     set parent [winfo parent $w]
-    if {[winfo viewable $parent]} { 
+    if {[winfo viewable $parent]} {
         set x [expr {[winfo rootx $parent]+([winfo reqwidth $parent]-[winfo reqwidth $w])/2}]
         set y [expr {[winfo rooty $parent]+([winfo reqheight $parent]-[winfo reqheight $w])/2}]
     } else {

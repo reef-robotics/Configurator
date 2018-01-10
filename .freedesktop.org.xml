@@ -1580,7 +1580,7 @@
     <alias type="video/flv"/>
   </mime-type>
   <mime-type type="application/x-go-sgf">
-    
+
     <comment>SGF record</comment>
     <comment xml:lang="ara">تسجيلة SGF</comment>
     <comment xml:lang="be">Zapisanaja hulnia SGF</comment>
@@ -4324,7 +4324,7 @@
     <generic-icon name="x-office-document"/>
     <magic priority="50">
       <match value="WPC" type="string" offset="1"/>
-      
+
     </magic>
     <glob pattern="*.wp"/>
     <glob pattern="*.wp4"/>
@@ -7962,7 +7962,7 @@
     </magic>
   </mime-type>
   <mime-type type="application/x-genesis-rom">
-    
+
     <comment>Genesis ROM</comment>
     <comment xml:lang="ara">Genesis ROM</comment>
     <comment xml:lang="be">Genesis ROM</comment>
@@ -11119,7 +11119,7 @@
     </magic>
   </mime-type>
   <mime-type type="application/x-nes-rom">
-    
+
     <comment>NES ROM</comment>
     <comment xml:lang="ara">NES ROM</comment>
     <comment xml:lang="be">NES ROM</comment>
@@ -11836,7 +11836,7 @@
     </magic>
     <glob pattern="*.ogm"/>
   </mime-type>
-  
+
   <mime-type type="application/x-ole-storage">
     <comment>OLE2 compound document storage</comment>
     <comment xml:lang="ara">تخزين مجمع مستند OLE2</comment>
@@ -13448,7 +13448,7 @@
     <glob pattern="*.spl"/>
   </mime-type>
   <mime-type type="application/x-shorten">
-    
+
     <comment>Shorten audio</comment>
     <comment xml:lang="ara">Shorten سمعي</comment>
     <comment xml:lang="be">Aŭdyjo Shorten</comment>
@@ -13681,7 +13681,7 @@
     <glob pattern="*.gg"/>
   </mime-type>
   <mime-type type="application/x-snes-rom">
-    
+
     <comment>Super NES ROM</comment>
     <comment xml:lang="ara">Super NES ROM</comment>
     <comment xml:lang="be">Super Nintendo ROM</comment>
@@ -17226,7 +17226,7 @@
     <comment xml:lang="vi">Âm thanh RIFF</comment>
     <comment xml:lang="zh_CN">RIFF 音频</comment>
     <comment xml:lang="zh_TW">RIFF 音效</comment>
-    
+
     <magic priority="45">
       <match value="RIFF" type="string" offset="0"/>
     </magic>
@@ -18453,8 +18453,8 @@
     <sub-class-of type="image/tiff"/>
     <glob pattern="*.dng"/>
   </mime-type>
-  
-  
+
+
   <mime-type type="image/x-canon-crw">
     <comment>Canon CRW raw image</comment>
     <comment xml:lang="ara">صورة Canon CRW خامة</comment>
@@ -18500,7 +18500,7 @@
     </magic>
     <glob pattern="*.crw"/>
   </mime-type>
-  
+
   <mime-type type="image/x-canon-cr2">
     <comment>Canon CR2 raw image</comment>
     <comment xml:lang="ara">صورة Canon CR2 خامة</comment>
@@ -18850,11 +18850,11 @@
     <expanded-acronym>Olympus Raw Format</expanded-acronym>
     <sub-class-of type="image/x-dcraw"/>
     <magic priority="50">
-      
-      
-      
-      
-      
+
+
+
+
+
       <match value="IIRO\x08\x00\x00\x00" type="string" offset="0"/>
     </magic>
     <glob pattern="*.orf"/>
@@ -18898,7 +18898,7 @@
     <comment xml:lang="zh_CN">Panasonic 原始图像</comment>
     <sub-class-of type="image/x-dcraw"/>
     <magic priority="50">
-      
+
       <match value="IIU\x00\x08\x00\x00\x00" type="string" offset="0"/>
     </magic>
     <glob pattern="*.raw"/>
@@ -18987,9 +18987,9 @@
     <expanded-acronym>X3 Foveon</expanded-acronym>
     <sub-class-of type="image/x-dcraw"/>
       <magic priority="50">
-        
+
         <match value="FOVb" type="string" offset="0">
-          
+
           <match value="0x00FF00FF" type="little32" offset="4" mask="0xFF00FF00"/>
         </match>
       </magic>
@@ -21214,7 +21214,7 @@
       <match value="\0\3" type="string" offset="1"/>
       <match value="\0\xa" type="string" offset="1"/>
       <match value="\0\xb" type="string" offset="1"/>
-      <match value="\0\2" type="string" offset="1"/> 
+      <match value="\0\2" type="string" offset="1"/>
     </magic>
     <glob pattern="*.icb"/>
     <glob pattern="*.tga"/>
@@ -21412,14 +21412,14 @@
     <acronym>WMF</acronym>
     <expanded-acronym>Windows Metafile</expanded-acronym>
     <magic priority="50">
-      
+
       <match value="0x9AC6CDD7" type="little32" offset="0">
-        
+
         <match value="0x0001" type="little16" offset="22">
           <match value="0x0009" type="little16" offset="24"/>
         </match>
       </match>
-      
+
       <match value="0x0001" type="little16" offset="0">
         <match value="0x0009" type="little16" offset="2"/>
       </match>
@@ -26807,7 +26807,7 @@
     <comment xml:lang="vi">địa điểm tài nguyên</comment>
     <comment xml:lang="zh_CN">资源位置</comment>
     <sub-class-of type="text/plain"/>
-    
+
     <glob pattern="*.uri"/>
     <glob pattern="*.url"/>
   </mime-type>
@@ -28580,9 +28580,9 @@
     <glob pattern="*.it87"/>
   </mime-type>
 
-  
+
   <mime-type type="x-content/image-dcf">
-    
+
     <comment>digital photos</comment>
     <comment xml:lang="ara">الصور الرقمية</comment>
     <comment xml:lang="be">ličbavyja zdymki</comment>
@@ -28624,7 +28624,7 @@
   </mime-type>
 
   <mime-type type="x-content/video-vcd">
-    
+
     <comment>Video CD</comment>
     <comment xml:lang="ara">CD مرئي</comment>
     <comment xml:lang="be">Videa CD</comment>
@@ -28667,7 +28667,7 @@
   </mime-type>
 
   <mime-type type="x-content/video-svcd">
-    
+
     <comment>Super Video CD</comment>
     <comment xml:lang="ara">Super Video CD</comment>
     <comment xml:lang="be">Super Video CD</comment>
@@ -28709,7 +28709,7 @@
   </mime-type>
 
   <mime-type type="x-content/video-dvd">
-    
+
     <comment>video DVD</comment>
     <comment xml:lang="ara">DVD مرئي</comment>
     <comment xml:lang="be">videa DVD</comment>
@@ -28752,7 +28752,7 @@
   </mime-type>
 
   <mime-type type="x-content/audio-cdda">
-    
+
     <comment>audio CD</comment>
     <comment xml:lang="ara">CD سمعي</comment>
     <comment xml:lang="be">aŭdyjo CD</comment>
@@ -28792,7 +28792,7 @@
   </mime-type>
 
   <mime-type type="x-content/blank-cd">
-    
+
     <comment>blank CD disc</comment>
     <comment xml:lang="ara">قرص CD فارغ</comment>
     <comment xml:lang="be">čysty dysk CD</comment>
@@ -28832,7 +28832,7 @@
   </mime-type>
 
   <mime-type type="x-content/blank-dvd">
-    
+
     <comment>blank DVD disc</comment>
     <comment xml:lang="ara">قرص DVD فارغ</comment>
     <comment xml:lang="be">čysty dysk DVD</comment>
@@ -28872,7 +28872,7 @@
   </mime-type>
 
   <mime-type type="x-content/blank-bd">
-    
+
     <comment>blank Blu-ray disc</comment>
     <comment xml:lang="ara">قرص بلو-راي فارغ</comment>
     <comment xml:lang="be">čysty dysk Blu-ray</comment>
@@ -28912,7 +28912,7 @@
   </mime-type>
 
   <mime-type type="x-content/blank-hddvd">
-    
+
     <comment>blank HD DVD disc</comment>
     <comment xml:lang="ara">قرص HD DVD فارغ</comment>
     <comment xml:lang="be">čysty dysk HD DVD</comment>
@@ -28952,7 +28952,7 @@
   </mime-type>
 
   <mime-type type="x-content/audio-dvd">
-    
+
     <comment>audio DVD</comment>
     <comment xml:lang="ara">DVD سمعي</comment>
     <comment xml:lang="be">aŭdyjo DVD</comment>
@@ -28996,7 +28996,7 @@
   </mime-type>
 
   <mime-type type="x-content/video-bluray">
-    
+
     <comment>Blu-ray video disc</comment>
     <comment xml:lang="ara">قرص بلو-راي مرئي</comment>
     <comment xml:lang="be">Videadysk Blu-ray</comment>
@@ -29040,7 +29040,7 @@
   </mime-type>
 
   <mime-type type="x-content/video-hddvd">
-    
+
     <comment>HD DVD video disc</comment>
     <comment xml:lang="ara">قرص HD DVD مرئي</comment>
     <comment xml:lang="be">Videadysk HD DVD</comment>
@@ -29085,7 +29085,7 @@
   </mime-type>
 
   <mime-type type="x-content/image-picturecd">
-    
+
     <comment>Picture CD</comment>
     <comment xml:lang="ara">CD صوري</comment>
     <comment xml:lang="be">Picture CD</comment>
@@ -29128,7 +29128,7 @@
   </mime-type>
 
   <mime-type type="x-content/audio-player">
-    
+
     <comment>portable audio player</comment>
     <comment xml:lang="ara">مشغل الملفات المسموعة المحمولة</comment>
     <comment xml:lang="be">pieranosny aŭdyjoplayer</comment>
@@ -29166,7 +29166,7 @@
   </mime-type>
 
   <mime-type type="x-content/software">
-    
+
     <comment>software</comment>
     <comment xml:lang="ara">برنامج</comment>
     <comment xml:lang="be">prahrama</comment>
@@ -29203,9 +29203,9 @@
     <comment xml:lang="vi">phần mềm</comment>
     <comment xml:lang="zh_CN">软件</comment>
   </mime-type>
- 
+
   <mime-type type="x-content/unix-software">
-    
+
     <comment>UNIX software</comment>
     <comment xml:lang="bg">Софтуер за UNIX</comment>
     <comment xml:lang="ca">Programari UNIX</comment>
@@ -29234,9 +29234,9 @@
       <treematch type="file" path="autorun.sh" match-case="true"/>
     </treemagic>
   </mime-type>
- 
+
   <mime-type type="x-content/win32-software">
-    
+
     <comment>Windows software</comment>
     <comment xml:lang="bg">Софтуер — Windows</comment>
     <comment xml:lang="ca">Programari Windows</comment>

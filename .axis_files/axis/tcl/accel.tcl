@@ -49,13 +49,13 @@ proc decode_accel { label } {
         set index [expr [string length $match]-1]
         set a [string range $label 0 [expr $index-1]]
         set b [string range $label [expr $index+1] end]
-        regsub -all {\\(.)} $a {\1} a    
-        regsub -all {\\(.)} $b {\1} b    
+        regsub -all {\\(.)} $a {\1} a
+        regsub -all {\\(.)} $b {\1} b
         set index [string length $a]
         set label ${a}$b
         return [list $index $label]
     }
-    regsub -all {\\(.)} $label {\1} label    
+    regsub -all {\\(.)} $label {\1} label
     return [list -1 $label]
 }
 

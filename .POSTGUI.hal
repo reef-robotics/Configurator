@@ -55,7 +55,7 @@ net z_probe pyvcp.o102 halui.mdi-command-03
 net xy_touch pyvcp.xy halui.mdi-command-04
 
 #HALUI_ZORIGIN
-net zorigin pyvcp.zorigin halui.mdi-command-05  
+net zorigin pyvcp.zorigin halui.mdi-command-05
 
 #PROBE_LED
 net probe-in => pyvcp.probe-led
