@@ -67,7 +67,7 @@ proc ::rb::nicer_rb_configure {w} {
     set hasimage [expr {"[::rb::_$w cget -image]" != ""}]
     set loss [expr 2*[::rb::_$w cget -bd] - 2*[::rb::_$w cget -highlightt]]
     if {$hasimage} {
-        set sz [winfo reqheight $w]
+        set sz [winfo reqheight $w] 
     } else {
         set sz [font metrics [::rb::_$w cget -font] -linespace]
     }
@@ -79,7 +79,7 @@ proc ::rb::nicer_rb_configure {w} {
         }
         ne - e - se {
             set x $ofs
-        }
+        } 
         nw - w - sw {
             set x 0
         }
@@ -93,7 +93,7 @@ proc ::rb::nicer_rb_configure {w} {
         bindtags $w [concat ::rb::nicer_rb [bindtags $w]]
         bindtags $w._button [list ::rb::nicer_rb_b [winfo toplevel $w] all]
     }
-    ::rb::nicer_rb_update $w
+    ::rb::nicer_rb_update $w 
 }
 
 # If there is an image, then the height of the button is the

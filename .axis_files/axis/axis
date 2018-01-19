@@ -47,7 +47,7 @@ gettext.install("linuxcnc", localedir=os.path.join(BASE, "share", "locale"), uni
 import array, time, atexit, tempfile, shutil, errno, thread, select, re, getopt
 
 # Print Tk errors to stdout. python.org/sf/639266
-import Tkinter
+import Tkinter 
 OldTk = Tkinter.Tk
 class Tk(OldTk):
     def __init__(self, *args, **kw):
@@ -162,7 +162,7 @@ if keys == "YES" :
     num_keys = True
 else:
     num_keys = False
-
+    
 feedrate_blackout = 0
 spindlerate_blackout = 0
 maxvel_blackout = 0
@@ -269,7 +269,7 @@ color_names = [
 
     'small_origin', 'axis_x', 'axis_y', 'axis_z',
     'cone',
-]
+]   
 
 def joints_mode():
     return s.motion_mode == linuxcnc.TRAJ_MODE_FREE and s.kinematics_type != linuxcnc.KINEMATICS_IDENTITY
@@ -614,7 +614,7 @@ class MyOpengl(GlCanonDraw, Opengl):
             else:
                 t[i] += " "
             i+=1
-
+            
         text.insert("end", "\n".join(t))
 
         window_height = text.winfo_height()
@@ -744,7 +744,7 @@ class LivePlotter:
 
     def error_task(self):
         error = e.poll()
-        if error:
+        if error: 
             kind, text = error
             if kind in (linuxcnc.NML_ERROR, linuxcnc.OPERATOR_ERROR):
                 icon = "error"
@@ -1086,13 +1086,13 @@ def cancel_open(event=None):
     if o.canon is not None:
         o.canon.aborted = True
 
-##added  ArcEye 09122011
+##added  ArcEye 09122011     
 def write_file_name(event=None):
     f = open('/tmp/emc.filename','w')
     if loaded_file:
-        print >>f, loaded_file
+        print >>f, loaded_file            
     else:
-        print >>f, "No File Loaded"
+        print >>f, "No File Loaded"        
     f.close()
     return
 #############################
@@ -1206,7 +1206,7 @@ tabs_preview = str(root_window.tk.call("set", "_tabs_preview"))
 tabs_numbers = str(root_window.tk.call("set", "_tabs_numbers"))
 pane_top = str(root_window.tk.call("set", "pane_top"))
 pane_bottom = str(root_window.tk.call("set", "pane_bottom"))
-widgets = nf.Widgets(root_window,
+widgets = nf.Widgets(root_window, 
     ("help_window", Toplevel, ".keys"),
     ("about_window", Toplevel, ".about"),
     ("text", Text, pane_bottom + ".t.text"),
@@ -1334,7 +1334,7 @@ def set_hal_jogincrement():
 def jogspeed_listbox_change(dummy, value):
     global jogincr_index_last
     # pdb.set_trace()
-    # FJ: curselection is not always up to date here, so
+    # FJ: curselection is not always up to date here, so 
     #     do a linear search by hand
     iterator = iter(root_window.call(widgets.jogincr._w, "list", "get", "0", "end"))
     idx = 0
@@ -1372,7 +1372,7 @@ def jogspeed_incremental(dir=1):
             jogincr_index_last -= 1
         if jogincr_index_last < 1:
             jogincr_index_last = 1
-    root_window.call(widgets.jogincr._w, "select", jogincr_index_last)
+    root_window.call(widgets.jogincr._w, "select", jogincr_index_last)   
     set_hal_jogincrement()
 
 
@@ -1545,7 +1545,7 @@ class _prompt_float:
             if ok: self.w.set("= %f%s" % (value, self.unit_str))
             else:  self.w.set(value)
 
-        if ok:
+        if ok: 
             self.ok.configure(state="normal")
         else:
             self.ok.configure(state="disabled")
@@ -1610,9 +1610,9 @@ class _prompt_touchoff(_prompt_float):
         mb = OptionMenu(f, c, *systems)
         mb.tk.call("size_menubutton_to_entries", mb)
         mb.configure(takefocus=1)
-        l.pack(side="left")
+        l.pack(side="left") 
         mb.pack(side="left")
-        f.pack(side="top")
+        f.pack(side="top")  
         self.buttons.tkraise()
         for i in [1,2,3,4,5,6,7,8,9]:
             t.bind("<Alt-KeyPress-%s>" % i, lambda event, system=systems[i-1]: c.set(system))
@@ -1622,7 +1622,7 @@ class _prompt_touchoff(_prompt_float):
 
     def workpiece_or_fixture(self, s):
         if s.startswith('T') and vars.tto_g11.get():
-            return _("fixture")
+            return _("fixture") 
         return _("workpiece")
 
     def change_system(self, *args):
@@ -1633,7 +1633,7 @@ class _prompt_touchoff(_prompt_float):
     def result(self):
         if self.u.get(): return self.v.get(), self.c.get()
         return None, None
-
+        
 def prompt_touchoff(title, text, default, system=None):
     t = _prompt_touchoff(title, text, default, system)
     return t.run()
@@ -1662,7 +1662,7 @@ def get_jog_speed(a):
 def get_max_jog_speed(a):
     if vars.joint_mode.get() or a in (0,1,2,6,7,8):
         return vars.max_speed.get()
-    else: return vars.max_aspeed.get()
+    else: return vars.max_aspeed.get()    
 
 def run_warn():
     warnings = []
@@ -1701,14 +1701,14 @@ def reload_file(refilter=True):
         open_file_guts(tempfile, True, False)
     if line:
         o.set_highlight_line(line)
-
+ 
 class TclCommands(nf.TclCommands):
 #---------------------------------------------------------------------------------------------------
-
+    
     def user0(self = 0):
         commands.usercmd(command0)
         return
-
+            
     def user1(self = 0):
         commands.usercmd(command1)
         return
@@ -1718,7 +1718,7 @@ class TclCommands(nf.TclCommands):
         return
 
     def user3(self = 0):
-        commands.usercmd(command3)
+        commands.usercmd(command3)    
         return
 
     def user4(self = 0):
@@ -1726,13 +1726,13 @@ class TclCommands(nf.TclCommands):
         return
 
     def user5(self = 0):
-        commands.usercmd(command5)
+        commands.usercmd(command5)    
         return
 
     def user6(self = 0):
         commands.usercmd(command6)
         return
-
+        
     def user7(self = 0):
         commands.usercmd(command7)
         return
@@ -1743,9 +1743,9 @@ class TclCommands(nf.TclCommands):
 
     def user9(self = 0):
         commands.usercmd(command9)
-        return
+        return        
 
-#   system commands will be prefixed with '$'
+#   system commands will be prefixed with '$' 
 #   halcmd commands prefixed with '#'
 #   otherwise commands are gcode
 
@@ -1759,7 +1759,7 @@ class TclCommands(nf.TclCommands):
                 if command[0] == '#':
                     x = command[1:]
                     x = "halcmd " + x
-                    os.system(x)
+                    os.system(x)                
                 else :
                     #commands.send_mdi_command(command)
                     c.mode(linuxcnc.MODE_MDI)
@@ -1767,7 +1767,7 @@ class TclCommands(nf.TclCommands):
                     c.mdi(command)
                     #c.wait_complete(300)
                     o.tkredraw
-                    ensure_mode(linuxcnc.MODE_MANUAL)
+                    ensure_mode(linuxcnc.MODE_MANUAL)        
         return
 #---------------------------------------------------------
     def next_tab(event=None):
@@ -1793,7 +1793,7 @@ class TclCommands(nf.TclCommands):
 
     def toggle_tto_g11(event=None):
         ap.putpref("tto_g11", vars.tto_g11.get())
-
+        
     def toggle_optional_stop(event=None):
         c.set_optional_stop(vars.optional_stop.get())
         ap.putpref("optional_stop", vars.optional_stop.get())
@@ -1847,7 +1847,7 @@ class TclCommands(nf.TclCommands):
                 sum(dist(l[1][:3], l[2][:3])/mf  for l in o.canon.traverse) +
                 o.canon.dwell_time
                 )
-
+ 
             props['g0'] = "%f %s".replace("%f", fmt) % (from_internal_linear_unit(g0, conv), units)
             props['g1'] = "%f %s".replace("%f", fmt) % (from_internal_linear_unit(g1, conv), units)
             if gt > 120:
@@ -2021,7 +2021,7 @@ class TclCommands(nf.TclCommands):
             program_start_line = 0
             t.tag_remove("ignored", "0.0", "end")
             o.set_highlight_line(None)
-####################################################################
+####################################################################                 
         return ""
 
     def open_file_name(f):
@@ -2075,8 +2075,8 @@ class TclCommands(nf.TclCommands):
             root_window.tk.call("exec", *e)
 
     def task_run(*event):
-##  Added ArcEye 08032014
-        if comp['run-disable']  : return
+##  Added ArcEye 08032014    
+        if comp['run-disable']  : return    
         if run_warn(): return
 
         global program_start_line, program_start_line_last
@@ -2209,7 +2209,7 @@ class TclCommands(nf.TclCommands):
                     if history_size != -1:
                         for idx in range(history_size - 1):
                             f.write("%s\n" % widgets.mdi_history.get(idx, idx))
-                finally:
+                finally:    
                     f.close()
             except IOError:
                 print >>sys.stderr, "Can't open MDI history file [%s] for writing" % file_name
@@ -2417,7 +2417,7 @@ class TclCommands(nf.TclCommands):
         s.poll()
         o.tkRedraw()
         reload_file(False)
-
+        
     def touch_off(event=None, new_axis_value = None):
         global system
         if not manual_ok(): return
@@ -2456,7 +2456,7 @@ class TclCommands(nf.TclCommands):
 # c.mdi("G56")
         ensure_mode(linuxcnc.MODE_MANUAL)
         s.poll()
-        o.tkRedraw()
+        o.tkRedraw()        
         reload_file(False)
 
     def set_axis_offset(event=None):
@@ -2614,7 +2614,7 @@ class TclCommands(nf.TclCommands):
 
 commands = TclCommands(root_window)
 
-vars = nf.Variables(root_window,
+vars = nf.Variables(root_window, 
     ("linuxcnctop_command", StringVar),
     ("emcini", StringVar),
     ("mdi_command", StringVar),
@@ -2698,7 +2698,7 @@ vars.touch_off_system.set("P1 G54")
 update_recent_menu()
 
 #added
-myfeedrate = 100
+myfeedrate = 100 
 def  feedup(n):
     global myfeedrate
     if n==1:
@@ -2851,7 +2851,7 @@ try:
                 history_size += 1
             else:
                 skip -= 1
-    finally:
+    finally:    
         f.close()
 except IOError:
     pass
@@ -3098,7 +3098,7 @@ if increments:
     root_window.call(widgets.jogincr._w, "list", "delete", "1", "end")
     root_window.call(widgets.jogincr._w, "list", "insert", "end", *increments)
 widgets.jogincr.configure(command= jogspeed_listbox_change)
-root_window.call(widgets.jogincr._w, "select", 0)
+root_window.call(widgets.jogincr._w, "select", 0)   
 
 vcp = inifile.find("DISPLAY", "PYVCP")
 
@@ -3145,7 +3145,7 @@ for i in range(9):
 for i in range(num_joints, 9):
     c = getattr(widgets, "joint_%d" % i)
     c.grid_forget()
-
+    
 if s.axis_mask & 56 == 0:
     widgets.ajogspeed.grid_forget()
 c = linuxcnc.command()
@@ -3173,7 +3173,7 @@ def get_coordinate_font(large):
         coordinate_font = "courier bold 20"
     else:
         coordinate_font = "courier bold 11"
-
+    
     if coordinate_font not in font_cache:
         font_cache[coordinate_font] = \
             glnav.use_pango_font(coordinate_font, 0, 128)
@@ -3189,7 +3189,7 @@ init()
 
 #right click menu for the program
 def rClicker(e):
-
+    
     def select_run_from(e):
         commands.task_run_line()
 
@@ -3242,7 +3242,7 @@ if hal_present == 1 :
     comp.newpin("notifications-clear-info",hal.HAL_BIT,hal.HAL_IN)
     comp.newpin("notifications-clear-error",hal.HAL_BIT,hal.HAL_IN)
 ##  Added ArcEye 08032014
-    comp.newpin("run-disable",hal.HAL_BIT, hal.HAL_IN)
+    comp.newpin("run-disable",hal.HAL_BIT, hal.HAL_IN)    
     vars.has_ladder.set(hal.component_exists('classicladder_rt'))
 
     if vcp:
@@ -3301,7 +3301,7 @@ lastfile = ""
 recent = ap.getpref('recentfiles', [], repr)
 if len(recent):
     lastfile = recent.pop(0)
-
+    
 code = []
 addrecent = True
 if args:
@@ -3312,8 +3312,8 @@ elif inifile.find("DISPLAY", "OPEN_FILE"):
     initialfile = inifile.find("DISPLAY", "OPEN_FILE")
 elif os.path.exists(lastfile):
     initialfile = lastfile
-    print "Loading "
-    print initialfile
+    print "Loading " 
+    print initialfile    
 elif lathe:
     initialfile = os.path.join(BASE, "share", "axis", "images","axis-lathe.ngc")
     addrecent = False
@@ -3325,7 +3325,7 @@ if os.path.exists(initialfile):
     open_file_guts(initialfile, False, addrecent)
 else:
     write_file_name()  ## added ArcEye 09122011  if no file loaded will initialise /tmp/emc.filename to "No File Loaded"
-
+    
 if lathe:
     commands.set_view_y()
 else:

@@ -67,7 +67,7 @@ proc ::cb::nicer_cb_configure {w} {
     set hasimage [expr {"[::cb::_$w cget -image]" != ""}]
     set loss [expr 2*[::cb::_$w cget -bd] - 2*[::cb::_$w cget -highlightt]]
     if {$hasimage} {
-        set sz [winfo reqheight $w]
+        set sz [winfo reqheight $w] 
     } else {
         set sz [font metrics [::cb::_$w cget -font] -linespace]
     }
@@ -79,7 +79,7 @@ proc ::cb::nicer_cb_configure {w} {
         }
         ne - e - se {
             set x $ofs
-        }
+        } 
         nw - w - sw {
             set x 0
         }
@@ -93,7 +93,7 @@ proc ::cb::nicer_cb_configure {w} {
         bindtags $w [concat ::cb::nicer_cb [bindtags $w]]
         bindtags $w._button [list ::cb::nicer_cb_b [winfo toplevel $w] all]
     }
-    ::cb::nicer_cb_update $w
+    ::cb::nicer_cb_update $w 
 }
 
 proc ::cb::install {} {

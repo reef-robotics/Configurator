@@ -519,7 +519,7 @@ Button .toolbar.program_pause \
 	-relief link \
 	-takefocus 0
 setup_widget_accel .toolbar.program_pause {}
-
+       
 Button .toolbar.program_stop \
 	-command task_stop \
 	-helptext [_ "Stop program execution \[ESC\]"] \
@@ -545,7 +545,7 @@ Button .toolbar.program_optpause \
         -takefocus 0
 
 vrule .toolbar.rule9
-
+ 
 Button .toolbar.view_zoomin \
 	-command zoomin \
 	-helptext [_ "Zoom in"] \
@@ -779,7 +779,7 @@ ${pane_top}.tabs itemconfigure mdi -raisecmd "[list focus ${_tabs_mdi}.command];
 #${pane_top}.tabs raise manual
 after idle {
     ${pane_top}.tabs raise manual
-    ${pane_top}.right raise preview
+    ${pane_top}.right raise preview 
     after idle ${pane_top}.tabs compute_size
     after idle ${pane_top}.right compute_size
 }
@@ -1933,7 +1933,7 @@ proc update_state {args} {
     relief {$task_state == $STATE_ESTOP} .toolbar.machine_estop
     state  {$task_state != $STATE_ESTOP} \
         .toolbar.machine_power {.menu.machine "Toggle _Machine Power"}
-    relief {$task_state == $STATE_ON}    .toolbar.machine_power
+    relief {$task_state == $STATE_ON}    .toolbar.machine_power 
 
     state  {$interp_state == $INTERP_IDLE && $taskfile != ""} \
         .toolbar.reload {.menu.file "_Reload"}
@@ -2047,10 +2047,10 @@ proc joint_mode_switch {args} {
         grid forget $::_tabs_manual.joints
         grid $::_tabs_manual.axes -column 1 -row 0 -padx 0 -pady 0 -sticky w
         setup_widget_accel $::_tabs_manual.axis [_ Axis:]
-    }
+    }    
 }
 
-proc queue_update_state {args} {
+proc queue_update_state {args} { 
     after cancel update_state
     after idle update_state
 }
@@ -2122,8 +2122,8 @@ foreach c {Entry Spinbox} {
 
     foreach b { Left Right
             Up Down Prior Next Home
-            Left Right Up Down
-            Prior Next Home
+            Left Right Up Down 
+            Prior Next Home 
             End } {
         bind $c <KeyPress-$b> {+if {[%W cget -state] == "normal"} break}
         bind $c <KeyRelease-$b> {+if {[%W cget -state] == "normal"} break}
@@ -2237,7 +2237,7 @@ proc places {s1 s2} {
     for {set i 15} {$i < $l1 && $i < $l2} {incr i} {
         set c1 [string index $s1 $i]
         set c2 [string index $s2 $i]
-        if {$c1 != "0" && $c1 != "." && $c1 != $c2} { return $i }
+        if {$c1 != "0" && $c1 != "." && $c1 != $c2} { return $i } 
     }
     return [string length $s1]
 }
@@ -2373,7 +2373,7 @@ DynamicHelp::add $_tabs_manual.jogf.override -text [_ "Temporarily allow jogging
 # beginning with "." from the open dialog.  Who knows what it does on other
 # versions.
 catch {
-    auto_load ::tk::dialog::file::
+    auto_load ::tk::dialog::file:: 
     namespace eval ::tk::dialog::file {}
     set ::tk::dialog::file::showHiddenBtn 1
     set ::tk::dialog::file::showHiddenVar 0

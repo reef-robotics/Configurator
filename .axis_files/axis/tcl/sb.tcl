@@ -48,11 +48,11 @@ proc ::sb::nicer_config {w} {
     set o [::sb::_$w cget -orient]
     if {![winfo exists ${w}._arrow1]} {
         button ${w}._arrow1
-    }
+    } 
     if {![winfo exists ${w}._arrow2]} {
         button ${w}._arrow2
-    }
-
+    } 
+    
     if {[string match "v*" $o]} {
         set sz [::sb::arrow_size_vertical $w]
         set width [winfo width $w]
