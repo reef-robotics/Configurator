@@ -21,7 +21,7 @@ G17 G20 G40 G49 G58 G80 G90 G94
 
 G0 Z[[#4/2]+0.2]
 
-M3 S1 (Turn Spindle On) 
+M3 S1 (Turn Spindle On)
 G0 X0.0000 Y#5
 
 G0 X[#2/2]
@@ -115,4 +115,3 @@ X4 Y4 A0
 
 M30
 %
-

@@ -14,26 +14,21 @@
 # 		Hard Coded ATLaS location to G53 coordinates
 # 		Fixed o102 bug
 # 		Consolidated o100 & o101
-#
 # 	Rev1.4
 # 		Added php installer
 # 		Added lspci dump to text file
 # 		Misc bug fixes
 # 		Fix o100: check for already tool loaded and measured
 # 		Added router mount chooser to fix ATLaS Y offset
-#
 # 	Rev1.5
 # 		Added grab_errors.sh script to copy startup errors to thumb drive
 # 		Added custom show_errors.tcl to display location of debug files
-#
 # 	Rev1.6
 # 		Set G28 and G30 locations in emc.var
 # 		Added key binding "q" to pause/resume toggle
-#
 # 	Rev1.7
 # 		Changed Z min to 10 to check possible G43 problems
 # 		Added o130 helical interpolation subroutine
-#
 # 	Rev1.8
 # 		Create log file
 # 		Started separating prompts from other stuff so that we can implement defaults and load prior config
@@ -42,7 +37,6 @@
 # 		Increased max velocity on rotary axis to 2 revs/second
 # 		Discovered 8192cu.ko module installation procedure
 # 		Fixed panel.xml case issue
-#
 # 	Rev1.9
 # 		Prompt for which PARPORT to use for pendant and remove unused PARPORT2 if necessary
 # 		Remove second e-stop code if not in use
@@ -52,6 +46,11 @@
 # 		Added prompt for up-rights type/height
 # 		Added prompt for SuperPID
 # 		General code cleanup and unified formatting
+# 	Rev1.9.1
+# 		Fix for incorrectly writting to existing log before backing up
+# 		Removed quotes from literal numbers
+# 		Replaced Windows end of line CRLF with Unix LF
+# 		Minor syntax corrections
 #
 # 	Todo:
 # 		Fix missing NGC startup file causes o100 to not be found
@@ -70,8 +69,7 @@
 # 		Increase debounce time for limits only
 # 		Put axis files back in original directories
 #
-#
-_VERSION="1.9"
+_VERSION="1.9.1"
 
 ###################################################################################################
 # 	some variables
@@ -122,23 +120,25 @@ then
 	exit
 fi
 
+# if log exists
+if [ -e $LOG_FILE ]
+then
+	# read previous log version
+	source <(grep VERSION $LOG_FILE)
+	# backup old log file then make new one
+	cp -f $LOG_FILE "$LOG_FILE.old"
+	rm -f $LOG_FILE
+	echo "$LOG_FILE $VERSION found!" >> $LOG_FILE
+fi
+
 if [ -e $CONFIG_FILE ]
 then
-	# config exists
-	# load config version
+	# read previous config version
 	source <(grep VERSION $CONFIG_FILE)
-	echo "$CONFIG_FILE $VERSION found!" >> $LOG_FILE
 	# backup old config file then make new one
 	cp -f $CONFIG_FILE "$CONFIG_FILE.old"
 	rm -f $CONFIG_FILE
-fi
-
-if [ -e $LOG_FILE ]
-then
-	source <(grep VERSION $LOG_FILE)
-	echo "$LOG_FILE $VERSION found!" >> $LOG_FILE
-	cp -f $LOG_FILE "$LOG_FILE.old"
-	rm -f $LOG_FILE
+	echo "$CONFIG_FILE $VERSION found!" >> $LOG_FILE
 fi
 
 if [ -L /usr/bin/axis ]
@@ -152,14 +152,14 @@ else
 	echo "NEW Configuration Backup Created!" >> $LOG_FILE
 fi
 
-# reset version just in case previous config loaded
+# set version to this script
 VERSION=$_VERSION
 echo "DATE="$DATETIME >> $CONFIG_FILE
 echo "VERSION=$VERSION" >> $CONFIG_FILE
 echo "this config run version $VERSION at $DATETIME" >> $LOG_FILE
 
 ###################################################################################################
-#	set num lock
+# 	set num lock
 #
 if [ -e "/usr/bin/numlockx" ]
 then
@@ -194,7 +194,7 @@ fi
 
 ###################################################################################################
 # 	if a bin folder is found in the $HOME folder, then it is added to the $PATH
-# 	this is where we will want to put and php scripts that we access from the GUI
+# 		this is where we will want to put any php scripts that we access from the GUI
 #
 if [ -d "/home/probotix/bin" ]
 then
@@ -233,7 +233,7 @@ fi
 echo "indentified $IDENTB" >> $LOG_FILE
 
 ###################################################################################################
-#	misc setup stuff
+# 	misc setup stuff
 #
 # set the default editor for .ngc files
 sudo cp -f .freedesktop.org.xml /usr/share/mime/packages/freedesktop.org.xml
@@ -296,8 +296,8 @@ cp .emc.var .TEMPemc.var
 
 ###################################################################################################
 # 	Step 1: order number
-#	 	we will use the order number to create a local database of config files
-#		we can also encode a license mechanism here
+# 		we will use the order number to create a local database of config files
+# 		we can also encode a license mechanism here
 #
 echo "prompt for order number" >> $LOG_FILE
 clear
@@ -316,7 +316,7 @@ then
 fi
 
 ###################################################################################################
-#	Step 2: which machine
+# 	Step 2: machine
 #
 echo "prompt for machine" >> $LOG_FILE
 clear
@@ -375,7 +375,7 @@ echo "MACHINE=$MACHINE" >> $LOG_FILE
 echo "MACHINE=$MACHINE" >> $CONFIG_FILE
 
 ###################################################################################################
-#	Step 3: up-rights (short or tall)
+# 	Step 3: up-rights (short or tall)
 #
 echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
 
@@ -389,15 +389,15 @@ do
 		"Short" )
 			UPRIGHT="SHORT"
 			# set Z minimum limit to 5.7 - temporarily disabled
-			#ZMINLIM="5.7"
-			ZMINLIM="10"
+			#ZMINLIM=5.7
+			ZMINLIM=10
 			break;;
 		"Tall" )
 			UPRIGHT="TALL"
 			# Y_MAX_LIMIT-=1
 			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
-			# needs to be at least 5.25 when using taller up-rights
-			ZMINLIM="5.25"
+			# needs to be at least 5.25 when using taller up-rights to avoid crimping cable
+			ZMINLIM=5.25
 			break;;
 	esac
 done
@@ -407,7 +407,7 @@ echo "UPRIGHT=$UPRIGHT" >> $CONFIG_FILE
 echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
 
 ###################################################################################################
-#	Step 4: units (inch or mm)
+# 	Step 4: units (inch or mm)
 #
 echo "prompt for units" >> $LOG_FILE
 clear
@@ -417,7 +417,7 @@ select x in "Inch" "Metric";
 do
 	case $x in
 		"Inch" )
-			UNITS="INCH";
+			UNITS="INCH"
 			I=1
 			UNIT_DESC="(X.XXX in inches)"
 			UNIT_DESC_BIG="(XX.XXX in inches)"
@@ -426,7 +426,7 @@ do
 			GUNITS="G20"
 			break;;
 		"Metric" )
-			UNITS="MM";
+			UNITS="MM"
 			I=25.4
 			UNIT_DESC="(XX.XX in mm)"
 			UNIT_DESC_BIG="(XXXX.XX in mm)"
@@ -463,16 +463,15 @@ Z_MIN_LIMIT=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
 echo "Z_MIN_LIMIT=$Z_MIN_LIMIT" >> $LOG_FILE
 
 ###################################################################################################
-#	set G28 and G30 locations in emc.var
+# 	set G28 and G30 locations in emc.var
 #
 echo "set G28 and G30 locations in emc.var" >> $LOG_FILE
 sed -i -e 's/REPLACE_X_PARK/'"$X_PARK"'/' .TEMPemc.var
 sed -i -e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMPemc.var
 
 ###################################################################################################
-#	Step 5a: spindle (router or vfd)
+# 	Step 5a: spindle (router or vfd)
 #
-
 SPID="FALSE"
 
 echo "prompt for spindle" >> $LOG_FILE
@@ -528,33 +527,33 @@ echo "SPINDLE=$SPINDLE" >> $CONFIG_FILE
 echo "SPID=$SPID" >> $LOG_FILE
 
 ###################################################################################################
-#	Step 5b: router mount (long or short)
-#		need to ask this to determine ATLaS Y position
-#		short mounts are -0.165 shorter from Y center
+# 	Step 5b: router mount (long or short)
+#			need to ask this to determine ATLaS Y position
+#			short mounts are -0.165 shorter from Y center
 #
-ATLAS_X="-0.075"
-ATLAS_Y="3.5533"
+ATLAS_X=-0.075
+ATLAS_Y=3.5533
 
-if [ $SPINDLE = "ROUTER" ]
+if [ $SPINDLE == "ROUTER" ]
 then
 	echo "prompt for router mount" >> $LOG_FILE
 	clear
 	echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 	echo "Choose Your Router Mount:"
-	select x in "One Piece" "Two-Piece Short Center" "Two-Piece Long Center";
+	select x in "One-Piece Long Center" "Two-Piece Short Center" "Two-Piece Long Center";
 	do
 		case $x in
-			"One Piece" )
+			"One-Piece Long Center" )
 				ROUTER_MOUNT="LONG"
-				ATLAS_Y="3.5533"
+				ATLAS_Y=3.5533
 				break;;
 			"Two-Piece Short Center" )
 				ROUTER_MOUNT="SHORT"
-				ATLAS_Y="3.3883"
+				ATLAS_Y=3.3883
 				break;;
 			"Two-Piece Long Center" )
 				ROUTER_MOUNT="LONG"
-				ATLAS_Y="3.5533"
+				ATLAS_Y=3.5533
 				break;;
 		esac
 	done
@@ -570,7 +569,7 @@ echo "ATLAS_X=$ATLAS_X" >> $LOG_FILE
 echo "ATLAS_Y=$ATLAS_Y" >> $LOG_FILE
 
 ###################################################################################################
-#	ATLaS settings
+# 	ATLaS settings
 #
 # hardcode ATLaS offset in 100.ngc
 echo "hard code ATLaS offset in 100.ngc" >> $LOG_FILE
@@ -584,7 +583,7 @@ sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMPemc.var
 sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMPemc.var
 
 ###################################################################################################
-#	Step 6: ACME screw (roton or helix)
+# 	Step 6: ACME screw (roton or helix)
 #
 echo "prompt for acme" >> $LOG_FILE
 clear
@@ -614,7 +613,7 @@ echo "replace z max velocity in ini file" >> $LOG_FILE
 sed -i -e 's/REPLACE_ZVELOCITY/'"Z_MAXVEL"'/' .TEMP.ini
 
 ###################################################################################################
-#	Step 7: drivers (unipolar or bipolar)
+# 	Step 7: drivers (unipolar or bipolar)
 #
 echo "prompt for drivers" >> $LOG_FILE
 clear
@@ -624,12 +623,12 @@ select x in "ProboStep" "MondoStep";
 do
 	case $x in
 		"ProboStep" )
-			DRIVERS="PROBOSTEP";
+			DRIVERS="PROBOSTEP"
 			XYSCALE=$(expr "scale=4; 2*200*2/$I" | bc -l)
 			ZSCALE=$(expr "scale=4; 2*200*$ZTPI/$I" | bc -l)
 			break;;
 		"MondoStep" )
-			DRIVERS="MONDOSTEP";
+			DRIVERS="MONDOSTEP"
 			XYSCALE=$(expr "scale=4; 4*200*2/$I" | bc -l)
 			ZSCALE=$(expr "scale=4; 4*200*$ZTPI/$I" | bc -l)
 			break;;
@@ -642,16 +641,16 @@ echo "XYSCALE=$XYSCALE" >> $LOG_FILE
 echo "ZSCALE=$ZSCALE" >> $LOG_FILE
 
 ###################################################################################################
-#	Step 8: gamepad or mpg pendant?
+# 	Step 8: jogger (gamepad or mpg pendant)
 #
 echo "prompt for gamepad" >> $LOG_FILE
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Do you use the GamePad or MPG pendant?"
-select x in "GamePad" "MPG Pendant" "None";
+echo "Do you use the Gamepad or MPG pendant?"
+select x in "Gamepad" "MPG Pendant" "None";
 do
 	case $x in
-		"GamePad" )
+		"Gamepad" )
 			PENDANT="GAMEPAD"
 			# remove mpg pendant from hal file
 			echo "remove mpg from hal file" >> $LOG_FILE
@@ -680,7 +679,7 @@ echo "PENDANT=$PENDANT" >> $LOG_FILE
 echo "PENDANT=$PENDANT" >> $CONFIG_FILE
 
 ###################################################################################################
-#	Step 9: confirm parallel port addresses, or enter custom
+# 	Step 9: confirm parallel port addresses, or enter custom
 #
 PARPORT0="0x378"
 PARPORT1=$IDENTB
@@ -746,9 +745,10 @@ else
 fi
 
 ###################################################################################################
-#	Step 10: sensors (atlas or zpuck)
+# 	Step 10: sensors (atlas or zpuck)
 #
 ZPUCK="NONE"
+
 echo "prompt for options" >> $LOG_FILE
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
@@ -757,7 +757,7 @@ select x in "ATLaS only" "Z-Puck only" "Both" "None" "Swap Parallel Ports";
 do
 	case $x in
 		"ATLaS only" )
-			SENSOR="ATLAS";
+			SENSOR="ATLAS"
 			sed -i -e 's/REPLACE_GUNITS/'"$GUNITS"'/' \
 				-e 's/REPLACE_ZMIN/'"$Z_MIN_LIMIT"'/' \
 				-e 's/REPLACE_MULTIPLIER/'"$I"'/' \
@@ -767,7 +767,7 @@ do
 			sed -i '/HALUI_ZPUCK/,+1d' .TEMPpostgui.hal
 			break;;
 		"Z-Puck only" )
-			SENSOR="Z-Puck";
+			SENSOR="Z-Puck"
 			ZPUCK_DIST=$(expr "scale=2; 5*$I" | bc -l)
 			ZPUCK_FEED=$(expr "scale=2; 10*$I" | bc -l)
 			clear
@@ -785,7 +785,7 @@ do
 			sed -i '/HALUI_FIRST_TOOL/,+1d' .TEMPpostgui.hal
 			break;;
 		"Both" )
-			SENSOR="BOTH";
+			SENSOR="BOTH"
 			ZPUCK_DIST=$(expr "scale=2; 5*$I" | bc -l)
 			ZPUCK_FEED=$(expr "scale=2; 10*$I" | bc -l)
 			clear
@@ -809,7 +809,7 @@ do
 			# fall-thru
 			;&
 		"None" )
-			SENSOR="NONE";
+			SENSOR="NONE"
 			# remove probe indicator
 			sed -i '/PROBE/,+15d' .TEMP.xml
 			sed -i '/PROBE_LED/,+1d' .TEMPpostgui.hal
@@ -825,6 +825,18 @@ done
 echo "SENSOR=$SENSOR" >> $LOG_FILE
 echo "SENSOR=$SENSOR" >> $CONFIG_FILE
 
+# save parports to hal file
+echo "set parport addr in hal file" >> $LOG_FILE
+sed -i -e 's/PARPORT0/'"$PARPORT0"'/' \
+	-e 's/PARPORT1/'"$PARPORT1"'/' \
+	-e 's/PARPORT2/'"$PARPORT2"'/' .TEMP.hal
+
+if [ $PARPORT2 == " in" ]
+then
+	# change back to none for logs
+	PARPORT2="NONE"
+fi
+
 echo "PARPORT0=$PARPORT0" >> $LOG_FILE
 echo "PARPORT1=$PARPORT1" >> $LOG_FILE
 echo "PARPORT2=$PARPORT2" >> $LOG_FILE
@@ -832,13 +844,8 @@ echo "PARPORT0=$PARPORT0" >> $CONFIG_FILE
 echo "PARPORT1=$PARPORT1" >> $CONFIG_FILE
 echo "PARPORT2=$PARPORT2" >> $CONFIG_FILE
 
-echo "set parport addr in hal file" >> $LOG_FILE
-sed -i -e 's/PARPORT0/'"$PARPORT0"'/' \
-	-e 's/PARPORT1/'"$PARPORT1"'/' \
-	-e 's/PARPORT2/'"$PARPORT2"'/' .TEMP.hal
-
 ###################################################################################################
-#	Step 11: rotary?
+# 	Step 11: rotary?
 #
 echo "prompt for rotary axis" >> $LOG_FILE
 clear
@@ -848,14 +855,14 @@ select xa in "Yes" "No";
 do
 	case $xa in
 		"Yes" )
-			COORDINATES="X Y Z A";
-			COORDINATES_="X\ Y\ Z\ A";
-			AXES="4";
+			COORDINATES="X Y Z A"
+			COORDINATES_="X\ Y\ Z\ A"
+			AXES=4
 			break;;
 		"No" )
-			COORDINATES="X Y Z";
-			COORDINATES_="X\ Y\ Z";
-			AXES="3";
+			COORDINATES="X Y Z"
+			COORDINATES_="X\ Y\ Z"
+			AXES=3
 			# remove a-axis from ini file
 			sed -i '/AXIS_3/,+10d' .TEMP.ini
 			# remove a-axis from hal file
@@ -868,7 +875,7 @@ done
 echo "COORDINATES=$COORDINATES" >> $CONFIG_FILE
 
 ###################################################################################################
-#	Step 12: driver swap
+# 	Step 12: driver swap
 #
 XSTEP="02"
 XDIR="03"
@@ -890,31 +897,31 @@ do
 		"X" )
 			XSTEP="17"
 			XDIR="01"
-			COORDINATES="X Y Z";
-			COORDINATES_="X\ Y\ Z";
-			AXES="3";
+			COORDINATES="X Y Z"
+			COORDINATES_="X\ Y\ Z"
+			AXES=3
 			# continue matching
 			;;&
 		"Y1" )
 			Y1STEP="17"
 			Y1DIR="01"
-			COORDINATES="X Y Z";
-			COORDINATES_="X\ Y\ Z";
-			AXES="3";
+			COORDINATES="X Y Z"
+			COORDINATES_="X\ Y\ Z"
+			AXES=3
 			;;&
 		"Y2" )
 			Y2STEP="17"
 			Y2DIR="01"
-			COORDINATES="X Y Z";
-			COORDINATES_="X\ Y\ Z";
-			AXES="3";
+			COORDINATES="X Y Z"
+			COORDINATES_="X\ Y\ Z"
+			AXES=3
 			;;&
 		"Z" )
 			ZSTEP="17"
 			ZDIR="01"
-			COORDINATES="X Y Z";
-			COORDINATES_="X\ Y\ Z";
-			AXES="3";
+			COORDINATES="X Y Z"
+			COORDINATES_="X\ Y\ Z"
+			AXES=3
 			;;&
 		"X" | "Y1" | "Y2" | "Z" )
 			# remove a-axis from ini file
@@ -941,7 +948,7 @@ sed -i -e "s/XSTEP/$XSTEP/" \
 	-e "s/ADIR/$ADIR/" .TEMP.hal
 
 ###################################################################################################
-#	Step 13: soft limits only
+# 	Step 13: soft limits only
 #
 echo "prompt for soft limits" >> $LOG_FILE
 clear
@@ -1063,7 +1070,7 @@ sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' \
 	-e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMP.ini
 
 ###################################################################################################
-#	Save the TEMP files
+#		Save the TEMP files
 #
 # create link to LinuxCNC on desktop
 cp .icon.desktop .TEMP.desktop
@@ -1088,12 +1095,12 @@ cp .TEMP100.ngc /home/probotix/linuxcnc/nc_files/subs/100.ngc
 rm -f .TEMP*
 
 ###################################################################################################
-#	End
+#		End
 #
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 echo "Configuration Complete"
-if [ $REBOOT = 1 ]
+if [ $REBOOT == 1 ]
 then
 	echo "Please reboot the PC to apply changes."
 else
