@@ -46,11 +46,12 @@
 # 		Added prompt for up-rights type/height
 # 		Added prompt for SuperPID
 # 		General code cleanup and unified formatting
-# 	Rev1.9.1
+# 	Rev1.9.2
 # 		Fix for incorrectly writting to existing log before backing up
 # 		Removed quotes from literal numbers
 # 		Replaced Windows end of line CRLF with Unix LF
 # 		Minor syntax corrections
+# 		Remove duplicate code in HAL for Router when using SPID
 #
 # 	Todo:
 # 		Fix missing NGC startup file causes o100 to not be found
@@ -69,7 +70,7 @@
 # 		Increase debounce time for limits only
 # 		Put axis files back in original directories
 #
-_VERSION="1.9.1"
+_VERSION="1.9.2"
 
 ###################################################################################################
 # 	some variables
@@ -492,6 +493,9 @@ do
 					"Yes" )
 						SPID="TRUE"
 						echo "SPID=$SPID" >> $CONFIG_FILE
+						# remove router code
+						echo "removing router controls from hal file" >> $LOG_FILE
+						sed -i '/ROUTER/,+7d' .TEMP.hal
 						break;;
 					"No" )
 						sed -i '/PWM/,+5d' .TEMP.hal
