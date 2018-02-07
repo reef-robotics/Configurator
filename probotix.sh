@@ -319,6 +319,10 @@ fi
 ###################################################################################################
 # 	Step 2: machine
 #
+# set Z minimum limit to 5.7 - temporarily disabled
+# needs to be at least 5.25 when using taller up-rights to avoid crimping cable
+ZMINLIM=5.7
+
 echo "prompt for machine" >> $LOG_FILE
 clear
 echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
@@ -389,16 +393,12 @@ do
 	case $x in
 		"Short" )
 			UPRIGHT="SHORT"
-			# set Z minimum limit to 5.7 - temporarily disabled
-			#ZMINLIM=5.7
-			ZMINLIM=10
 			break;;
 		"Tall" )
 			UPRIGHT="TALL"
-			# Y_MAX_LIMIT-=1
 			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
-			# needs to be at least 5.25 when using taller up-rights to avoid crimping cable
-			ZMINLIM=5.25
+			# need Y offset for ATLaS if using TALL uprights
+			#$Y_OFFSET=
 			break;;
 	esac
 done
@@ -536,7 +536,7 @@ echo "SPID=$SPID" >> $LOG_FILE
 #			short mounts are -0.165 shorter from Y center
 #
 ATLAS_X=-0.075
-ATLAS_Y=3.5533
+#ATLAS_Y=3.5533
 
 if [ $SPINDLE == "ROUTER" ]
 then
@@ -567,19 +567,21 @@ fi
 echo "ROUTER_MOUNT=$ROUTER_MOUNT" >> $LOG_FILE
 echo "ROUTER_MOUNT=$ROUTER_MOUNT" >> $CONFIG_FILE
 
+###################################################################################################
+# 	ATLaS settings
+#
 ATLAS_X=$(expr "scale=4; $ATLAS_X*$I" | bc -l)
+#ATLAS_Y=$(expr "scale=4; $ATLAS_Y+$Y_OFFSET" | bc -l)
 ATLAS_Y=$(expr "scale=4; $ATLAS_Y*$I" | bc -l)
 echo "ATLAS_X=$ATLAS_X" >> $LOG_FILE
 echo "ATLAS_Y=$ATLAS_Y" >> $LOG_FILE
 
-###################################################################################################
-# 	ATLaS settings
-#
 # hardcode ATLaS offset in 100.ngc
 echo "hard code ATLaS offset in 100.ngc" >> $LOG_FILE
 sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMP100.ngc
 sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMP100.ngc
-sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .nc_files/utilities/table_extents.ngc
+# disabled - variable does not exist in file any more?
+#sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .nc_files/utilities/table_extents.ngc
 
 # set G59.3 offset to center of ATLaS
 echo "set G59.3 offset to center of ATLaS" >> $LOG_FILE
@@ -778,10 +780,10 @@ do
 			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 			echo "Enter Height of Z-Puck $UNIT_DESC"
 			read ZPUCK
-			sed -i -e 's/REPLACE_ZP_HEIGHT/'"$ZPUCK"'/' \
+			sed -i -e 's/REPLACE_GUNITS/'"$GUNITS"'/' \
 				-e 's/REPLACE_ZP_DIST/'"$ZPUCK_DIST"'/' \
 				-e 's/REPLACE_ZP_FEED/'"$ZPUCK_FEED"'/' \
-				-e 's/REPLACE_GUNITS/'"$GUNITS"'/' .TEMP102.ngc
+				-e 's/REPLACE_ZP_HEIGHT/'"$ZPUCK"'/' .TEMP102.ngc
 			echo "ZPUCK=$ZPUCK" >> $LOG_FILE
 			echo "ZPUCK=$ZPUCK" >> $CONFIG_FILE
 			# remove atlas
@@ -796,10 +798,10 @@ do
 			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 			echo "Enter Height of Z-Puck $UNIT_DESC"
 			read ZPUCK
-			sed -i -e 's/REPLACE_ZP_HEIGHT/'"$ZPUCK"'/' \
+			sed -i -e 's/REPLACE_GUNITS/'"$GUNITS"'/' \
 				-e 's/REPLACE_ZP_DIST/'"$ZPUCK_DIST"'/' \
 				-e 's/REPLACE_ZP_FEED/'"$ZPUCK_FEED"'/' \
-				-e 's/REPLACE_GUNITS/'"$GUNITS"'/' .TEMP102.ngc
+				-e 's/REPLACE_ZP_HEIGHT/'"$ZPUCK"'/' .TEMP102.ngc
 			echo "ZPUCK=$ZPUCK" >> $LOG_FILE
 			echo "ZPUCK=$ZPUCK" >> $CONFIG_FILE
 			sed -i -e 's/REPLACE_GUNITS/'"$GUNITS"'/' \

@@ -4,16 +4,17 @@ o100 SUB
 #<_ATLAS_Y> = REPLACE_ATLAS_Y
 #<_MULTIPLIER> = REPLACE_MULTIPLIER
 #<_Z_MIN> = REPLACE_ZMIN
+#<_X_PARK> = REPLACE_X_PARK
 
-						(#5400 is current tool number)
-						(#1 must be passed as tool number)
+(#5400 is current tool number)
+(#1 must be passed as tool number)
 
 M5 M9						(turn off spindle and shop vac)
 REPLACE_GUNITS					(set units)
 G53 G90 G0 Z0 					(retract z)
 
 o101 if [#1 NE #5400] 				(if tool number has changed)
-G53 G0 XREPLACE_X_PARK Y0			(drive out to front of machine)
+G53 G0 X#<_X_PARK> Y0			(drive out to front of machine)
 T#1 M6 						(tool change prompt)
 o101 endif
 

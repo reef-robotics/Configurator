@@ -3,22 +3,15 @@
 (This file needs to be modified to match your machine travel)
 (1/8" end mill)
 
+(touch off G54 Z to top of spoil board!!!)
+(other coordinate systems will pull Z offset from #5223)
+(no need to touch off X & Y)
 
-G56 G90 G20 G17 G40 G49
-G64 P0.01
 
 G10 L2 P3 X1.5 Y0.5 Z[#5223]	(Grid Offset G56)
 
-(touch off 54 Z to top of spoil board!!!)
-#6 = [#5221] (G54 X offset)
-#7 = [#5222] (G54 Y offset)
-#8 = [#5223] (G54 Z offset)
-#9 = 1.681 (Machine Origin offset X)
-#10 = 4.625(Machine Origin offset Y)
-#13 = -0.075 (Tool Sensor Offset X)
-#14 = 3.5533 (Tool Sensor Offset Y)
-
-
+G56 G90 G20 G17 G40 G49
+G64 P0.01
 
 
 #15 = 0.1 (z clear height)
@@ -34,7 +27,6 @@ G10 L2 P3 X1.5 Y0.5 Z[#5223]	(Grid Offset G56)
 #23 = 24 (X maximum)
 #24 = 50 (Y maximum)
 #25 = 0  (Y counter)
-
 
 
 G0 Z1
