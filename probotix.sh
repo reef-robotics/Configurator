@@ -70,7 +70,22 @@
 # 		Increase debounce time for limits only
 # 		Put axis files back in original directories
 #
-_VERSION="1.9.2"
+_VERSION="1.9.3"
+
+###################################################################################################
+# 	some functions
+#
+f_prompt() {
+	# if second parameter not set then clear screen
+	if [ -z $2 ]
+	then
+		clear
+	fi
+
+	printf '%s\n' "PROBOTIX LinuxCNC Configurator Version: $VERSION"
+	printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+	printf '%s\n' "$1"
+}
 
 ###################################################################################################
 # 	some variables
@@ -301,9 +316,7 @@ cp .emc.var .TEMPemc.var
 # 		we can also encode a license mechanism here
 #
 echo "prompt for order number" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Enter Order Number:"
+f_prompt "Enter Order Number:"
 read ORDER_NO
 echo "ORDER_NO=$ORDER_NO" >> $LOG_FILE
 echo "ORDER_NO=$ORDER_NO" >> $CONFIG_FILE
@@ -324,9 +337,7 @@ fi
 ZMINLIM=5.7
 
 echo "prompt for machine" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Choose your machine:"
+f_prompt "Choose your machine:"
 select x in "V90mk2" "Comet" "Asteroid" "Meteor" "Nebula/MeteorXL" "Custom";
 do
 	case $x in
@@ -358,15 +369,11 @@ do
 		"Custom" )
 			MACHINE="CUSTOM"
 			echo "prompt for custom x travel" >> $LOG_FILE
-			clear
-			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-			echo "Enter X-Axis Max Travel $UNIT_DESC_BIG"
+			f_prompt "Enter X-Axis Max Travel $UNIT_DESC_BIG"
 			read CUSTOM_X_MAX_LIMIT
 			echo "read CUSTOM_X_MAX_LIMIT=$CUSTOM_X_MAX_LIMIT" >> $LOG_FILE
 			echo "prompt for custom y travel" >> $LOG_FILE
-			clear
-			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-			echo "Enter Y-Axis Max Travel $UNIT_DESC_BIG"
+			f_prompt "Enter Y-Axis Max Travel $UNIT_DESC_BIG"
 			read CUSTOM_Y_MAX_LIMIT
 			echo "read CUSTOM_Y_MAX_LIMIT=$CUSTOM_Y_MAX_LIMIT" >> $LOG_FILE
 			# use input values instead of calculated
@@ -385,9 +392,7 @@ echo "MACHINE=$MACHINE" >> $CONFIG_FILE
 echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
 
 echo "prompt for up-right" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Choose your up-right:"
+f_prompt "Choose your up-right:"
 select x in "Short" "Tall";
 do
 	case $x in
@@ -411,9 +416,7 @@ echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
 # 	Step 4: units (inch or mm)
 #
 echo "prompt for units" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Choose your units:"
+f_prompt "Choose your units:"
 select x in "Inch" "Metric";
 do
 	case $x in
@@ -476,9 +479,7 @@ sed -i -e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMPemc.var
 SPID="FALSE"
 
 echo "prompt for spindle" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Choose your spindle:"
+f_prompt "Choose your spindle:"
 select x in "Router" "VFD Spindle";
 do
 	case $x in
@@ -592,9 +593,7 @@ sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMPemc.var
 # 	Step 6: ACME screw (roton or helix)
 #
 echo "prompt for acme" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Choose your ACME screw:"
+f_prompt "Choose your ACME screw:"
 select x in "Roton" "Helix";
 do
 	case $x in
@@ -622,9 +621,7 @@ sed -i -e 's/REPLACE_ZVELOCITY/'"Z_MAXVEL"'/' .TEMP.ini
 # 	Step 7: drivers (unipolar or bipolar)
 #
 echo "prompt for drivers" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Choose your drivers:"
+f_prompt "Choose your drivers:"
 select x in "ProboStep" "MondoStep";
 do
 	case $x in
@@ -650,9 +647,7 @@ echo "ZSCALE=$ZSCALE" >> $LOG_FILE
 # 	Step 8: jogger (gamepad or mpg pendant)
 #
 echo "prompt for gamepad" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Do you use the Gamepad or MPG pendant?"
+f_prompt "Do you use the Gamepad or MPG pendant?"
 select x in "Gamepad" "MPG Pendant" "None";
 do
 	case $x in
@@ -691,21 +686,15 @@ PARPORT0="0x378"
 PARPORT1=$IDENTB
 #PARPORT2="0xd030"
 echo "prompt confirm parport addr" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "PARPORT.0 $PARPORT0, PARPORT.1 $PARPORT1 Okay?"
+f_prompt "PARPORT.0 $PARPORT0, PARPORT.1 $PARPORT1 Okay?"
 select x in "Yes" "No";
 do
 	case $x in
 		"Yes" )
 			break;;
 		"No" )
-			clear
-			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-			echo "Enter PARPORT0:"
+			f_prompt "Enter PARPORT0:"
 			read PARPORT0
-			clear
-			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 			echo "Enter PARPORT1:"
 			read PARPORT1
 			break;;
@@ -715,8 +704,7 @@ echo "$x" >> $LOG_FILE
 
 if [ $PENDANT = "MPG" ]
 then
-	echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-	echo "Choose PARPORT for pendant use:"
+	f_prompt "Choose PARPORT for pendant use:" "keep"
 	select x in "PARPORT.1" "PARPORT.2";
 	do
 		case $x in
@@ -756,9 +744,7 @@ fi
 ZPUCK="NONE"
 
 echo "prompt for options" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Do you use the ATLaS Tool Length Sensor or the Z-Puck?"
+f_prompt "Do you use the ATLaS Tool Length Sensor or the Z-Puck?"
 select x in "ATLaS only" "Z-Puck only" "Both" "None" "Swap Parallel Ports";
 do
 	case $x in
@@ -776,9 +762,7 @@ do
 			SENSOR="Z-Puck"
 			ZPUCK_DIST=$(expr "scale=2; 5*$I" | bc -l)
 			ZPUCK_FEED=$(expr "scale=2; 10*$I" | bc -l)
-			clear
-			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-			echo "Enter Height of Z-Puck $UNIT_DESC"
+			f_prompt "Enter Height of Z-Puck $UNIT_DESC"
 			read ZPUCK
 			sed -i -e 's/REPLACE_GUNITS/'"$GUNITS"'/' \
 				-e 's/REPLACE_ZP_DIST/'"$ZPUCK_DIST"'/' \
@@ -794,9 +778,7 @@ do
 			SENSOR="BOTH"
 			ZPUCK_DIST=$(expr "scale=2; 5*$I" | bc -l)
 			ZPUCK_FEED=$(expr "scale=2; 10*$I" | bc -l)
-			clear
-			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-			echo "Enter Height of Z-Puck $UNIT_DESC"
+			f_prompt "Enter Height of Z-Puck $UNIT_DESC"
 			read ZPUCK
 			sed -i -e 's/REPLACE_GUNITS/'"$GUNITS"'/' \
 				-e 's/REPLACE_ZP_DIST/'"$ZPUCK_DIST"'/' \
@@ -854,9 +836,7 @@ echo "PARPORT2=$PARPORT2" >> $CONFIG_FILE
 # 	Step 11: rotary?
 #
 echo "prompt for rotary axis" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Do you have the rotary axis?"
+f_prompt "Do you have the rotary axis?"
 select xa in "Yes" "No";
 do
 	case $xa in
@@ -894,9 +874,7 @@ ZDIR="07"
 ASTEP="17"
 ADIR="01"
 echo "prompt for driver swap" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Do you want to swap a motor to the A-axis output?"
+f_prompt "Do you want to swap a motor to the A-axis output?"
 select x in "X" "Y1" "Y2" "Z" "No";
 do
 	case $x in
@@ -957,9 +935,7 @@ sed -i -e "s/XSTEP/$XSTEP/" \
 # 	Step 13: soft limits only
 #
 echo "prompt for soft limits" >> $LOG_FILE
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Do you want to use soft limits only?"
+f_prompt "Do you want to use soft limits only?"
 select x in "Yes" "No";
 do
 	case $x in
@@ -994,7 +970,7 @@ Z_LATCH_VEL=$(expr 0.2*$I | bc -l)
 DEFAULT_VELOCITY=$(expr 3.34*$I | bc -l)
 MAX_LINEAR_VELOCITY=$(expr 3.34*$I | bc -l)
 
-# folder should only exsist during factory install
+# folder should only exist during factory install
 if [ -d ".CONFIGS" ]
 then
 	clear
@@ -1103,9 +1079,7 @@ rm -f .TEMP*
 ###################################################################################################
 #		End
 #
-clear
-echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-echo "Configuration Complete"
+f_prompt "Configuration Complete"
 if [ $REBOOT == 1 ]
 then
 	echo "Please reboot the PC to apply changes."
