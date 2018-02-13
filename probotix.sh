@@ -6,30 +6,30 @@
 # 	Written by Len Shelton
 # 	Version 1.0 release  Mar 29 2016
 #
-# 	Rev1.1	Bug fixes
-# 	Rev1.2	Bug Fixes
-# 	Rev1.3
+# 	Rev 1.1	Bug fixes
+# 	Rev 1.2	Bug Fixes
+# 	Rev 1.3
 # 		Added PyVCP buttons
 # 		Hard Coded G28 & G30 buttons to G53 coordinates
 # 		Hard Coded ATLaS location to G53 coordinates
 # 		Fixed o102 bug
 # 		Consolidated o100 & o101
-# 	Rev1.4
+# 	Rev 1.4
 # 		Added php installer
 # 		Added lspci dump to text file
 # 		Misc bug fixes
 # 		Fix o100: check for already tool loaded and measured
 # 		Added router mount chooser to fix ATLaS Y offset
-# 	Rev1.5
+# 	Rev 1.5
 # 		Added grab_errors.sh script to copy startup errors to thumb drive
 # 		Added custom show_errors.tcl to display location of debug files
-# 	Rev1.6
+# 	Rev 1.6
 # 		Set G28 and G30 locations in emc.var
 # 		Added key binding "q" to pause/resume toggle
-# 	Rev1.7
+# 	Rev 1.7
 # 		Changed Z min to 10 to check possible G43 problems
 # 		Added o130 helical interpolation subroutine
-# 	Rev1.8
+# 	Rev 1.8
 # 		Create log file
 # 		Started separating prompts from other stuff so that we can implement defaults and load prior config
 # 		Turned off g-zip stdout output
@@ -37,7 +37,7 @@
 # 		Increased max velocity on rotary axis to 2 revs/second
 # 		Discovered 8192cu.ko module installation procedure
 # 		Fixed panel.xml case issue
-# 	Rev1.9
+# 	Rev 1.9
 # 		Prompt for which PARPORT to use for pendant and remove unused PARPORT2 if necessary
 # 		Remove second e-stop code if not in use
 # 		Remove references to a-axis if no rotary present
@@ -46,12 +46,16 @@
 # 		Added prompt for up-rights type/height
 # 		Added prompt for SuperPID
 # 		General code cleanup and unified formatting
-# 	Rev1.9.2
+# 	Rev 1.9.2
 # 		Fix for incorrectly writting to existing log before backing up
 # 		Removed quotes from literal numbers
 # 		Replaced Windows end of line CRLF with Unix LF
 # 		Minor syntax corrections
 # 		Remove duplicate code in HAL for Router when using SPID
+# 	Rev 2.0
+#			Major Axis GUI update
+#			Removed PARPORT2, joined it into PARPORT1, set PARPORT1 to "in"
+#			Changed ZMIN to 5.7 to match new taller machines
 #
 # 	Todo:
 # 		Fix missing NGC startup file causes o100 to not be found
@@ -59,7 +63,6 @@
 # 		Clear preview history after homing
 # 		Make insmod edimax permanent
 # 		Probe from shorter height
-# 		Z-axis min limit fix
 # 		Add key bindings for rotary jog
 # 		Add support for older gamepads
 # 		Check for error on script keyboard input
@@ -70,7 +73,7 @@
 # 		Increase debounce time for limits only
 # 		Put axis files back in original directories
 #
-_VERSION="1.9.3"
+_VERSION="2.0"
 
 ###################################################################################################
 # 	some functions
@@ -95,7 +98,6 @@ DATETIME=$(date +'%Y-%m-%d %T')
 REBOOT=0
 CONFIG_FILE="/home/probotix/LINUXCNC_CONFIG"
 LOG_FILE="/home/probotix/LINUXCNC_LOG"
-#rm -f $LOG_FILE
 
 ###################################################################################################
 # 	push password into sudo so that it doesnt prompt for it later
@@ -113,9 +115,9 @@ gconftool-2 --set /apps/gnome-terminal/profiles/Default/background_color --type 
 ###################################################################################################
 # 	check for some errors
 #
-if ( whoami != probotix )
+if [ "$(whoami)" != "probotix" ]
 then
-	echo "Not running as user probotix! Call PROBOTIX 309-691-2643"
+	echo "Not running as user probotix! Call PROBOTIX 844.472.9262"
 	sleep 10
 	exit
 fi
@@ -124,14 +126,14 @@ if [ -d "/home/probotix" ]
 then
 	clear
 else
-	echo "Probotix directory not found! Call PROBOTIX 309-691-2643"
+	echo "Probotix directory not found! Call PROBOTIX 844.472.9262"
 	sleep 10
 	exit
 fi
 
 if [ -d "/home/probotix/emc2" ]
 then
-	echo "EMC2 directory found! Call PROBOTIX 309-691-2643"
+	echo "EMC2 directory found! Call PROBOTIX 844.472.9262"
 	sleep 10
 	exit
 fi
@@ -170,7 +172,7 @@ fi
 
 # set version to this script
 VERSION=$_VERSION
-echo "DATE="$DATETIME >> $CONFIG_FILE
+echo "DATE=$DATETIME" >> $CONFIG_FILE
 echo "VERSION=$VERSION" >> $CONFIG_FILE
 echo "this config run version $VERSION at $DATETIME" >> $LOG_FILE
 
@@ -186,9 +188,9 @@ else
 	sudo ./configure
 	sudo make
 	sudo make install
-	cd ..
 	echo "installing numlockx" >> $LOG_FILE
 	numlockx
+	cd ..
 fi
 
 ###################################################################################################
@@ -204,7 +206,20 @@ else
 	sudo dpkg -i php5-common_5.3.2-1ubuntu4.30_i386.deb
 	sudo dpkg -i php5-cli_5.3.2-1ubuntu4.30_i386.deb
 	echo "installing php" >> $LOG_FILE
-	sleep 3
+	cd ..
+fi
+
+###################################################################################################
+# 	install samba
+#		sudo apt-get install samba
+#
+if [ -e "/etc/samba/smb.conf" ]
+then
+	echo "samba already installed" >> $LOG_FILE
+else
+	cd .samba/
+	sudo dpkg -i *.deb
+	echo "installing samba" >> $LOG_FILE
 	cd ..
 fi
 
@@ -226,6 +241,12 @@ fi
 # 	this section tries to identify the add-on parallel port address
 #
 LSPCI=$(lspci -v | grep NetMos)
+if [ -z "$LSPCI" ]
+then
+	echo "SECOND PARALLEL PORT NOT FOUND"
+	echo "SECOND PARALLEL PORT NOT FOUND" >> $LOG_FILE
+	sleep 3
+fi
 
 # capture output of lscpi and copy it to file on the thumb drive so customer can email it if necessary
 rm -rf ./LSPCI.txt
@@ -249,6 +270,32 @@ fi
 echo "indentified $IDENTB" >> $LOG_FILE
 
 ###################################################################################################
+# 	Step 1: order number
+# 		we will use the order number to create a local database of config files
+# 		we can also encode a license mechanism here
+#
+echo "prompt for order number" >> $LOG_FILE
+f_prompt "Enter Order Number:"
+read ORDER_NO
+echo "ORDER_NO=$ORDER_NO" >> $LOG_FILE
+echo "ORDER_NO=$ORDER_NO" >> $CONFIG_FILE
+
+case $ORDER_NO in
+	666 )
+		clear
+		echo "FACTORY INSTALL"
+		sleep 1
+		echo "FACTORY INSTALL" >> $LOG_FILE
+		break;;
+	999 )
+		clear
+		echo "UPGRADE INSTALL"
+		sleep 1
+		echo "UPGRADE INSTALL" >> $LOG_FILE
+		break;;
+esac
+
+###################################################################################################
 # 	misc setup stuff
 #
 # set the default editor for .ngc files
@@ -261,14 +308,20 @@ rm -Rf /home/probotix/Desktop/*.desktop
 rm -f /home/probotix/Desktop/nc_files
 
 # delete and recreate the linuxcnc directory
-rm -Rf /home/probotix/linuxcnc
-mkdir -p /home/probotix/linuxcnc
-mkdir -p /home/probotix/linuxcnc/configs
-mkdir -p /home/probotix/linuxcnc/configs/PROBOTIX
-mkdir -p /home/probotix/linuxcnc/configs/PROBOTIX/axis
-mkdir -p /home/probotix/linuxcnc/nc_files
+if [ $ORDER_NO -ne 999]
+then
+	rm -Rf /home/probotix/linuxcnc
+	mkdir -p /home/probotix/linuxcnc/configs/PROBOTIX/axis
+	mkdir -p /home/probotix/linuxcnc/nc_files
+fi
+
 cp -R .nc_files/* /home/probotix/linuxcnc/nc_files
 sudo cp .probotix_splash.gif /usr/share/linuxcnc/probotix_splash.gif
+
+# copy custom stepconf
+sudo cp -f .stepconf /usr/bin/stepconf
+#/usr/share/applications/linuxcnc-stepconf.desktop
+#/usr/share/linuxcnc/stepconf.glade
 
 # create symlink to axis program
 sudo rm -f /usr/bin/axis
@@ -276,6 +329,9 @@ sudo rm -Rf /usr/share/axis
 cp -Rud .axis_files/axis/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
 sudo ln -s /home/probotix/linuxcnc/configs/PROBOTIX/axis/axis /usr/bin/axis
 sudo ln -s /home/probotix/linuxcnc/configs/PROBOTIX/axis /usr/share/axis
+
+# install fixed tooledit
+sudo cp .tooledit /usr/bin/tooledit
 
 # install customized files
 sudo cp .show_errors.tcl /usr/lib/tcltk/linuxcnc/show_errors.tcl
@@ -300,45 +356,15 @@ echo "gedit line numbers" >> $LOG_FILE
 sudo apt-get -qq -y remove update-manager
 echo "remove update-manager" >> $LOG_FILE
 
-# create some temporary files from our skeleton files
-echo "creating temporary files" >> $LOG_FILE
-cp .PROBOTIX.ini .TEMP.ini
-cp .PROBOTIX.hal .TEMP.hal
-cp .PYVCP.xml .TEMP.xml
-cp .POSTGUI.hal .TEMPpostgui.hal
-cp .102.ngc .TEMP102.ngc
-cp .100.ngc .TEMP100.ngc
-cp .emc.var .TEMPemc.var
-
-###################################################################################################
-# 	Step 1: order number
-# 		we will use the order number to create a local database of config files
-# 		we can also encode a license mechanism here
-#
-echo "prompt for order number" >> $LOG_FILE
-f_prompt "Enter Order Number:"
-read ORDER_NO
-echo "ORDER_NO=$ORDER_NO" >> $LOG_FILE
-echo "ORDER_NO=$ORDER_NO" >> $CONFIG_FILE
-
-if [ $ORDER_NO -eq 666 ]
-then
-	clear
-	echo "FACTORY INSTALL"
-	sleep 1
-	echo "FACTORY INSTALL" >> $LOG_FILE
-fi
-
 ###################################################################################################
 # 	Step 2: machine
 #
-# set Z minimum limit to 5.7 - temporarily disabled
-# needs to be at least 5.25 when using taller up-rights to avoid crimping cable
+# needs to be at least 5.7 for taller up-rights to avoid crimping cable
 ZMINLIM=5.7
 
 echo "prompt for machine" >> $LOG_FILE
 f_prompt "Choose your machine:"
-select x in "V90mk2" "Comet" "Asteroid" "Meteor" "Nebula/MeteorXL" "Custom";
+select x in "V90mk2" "Comet" "Asteroid" "Meteor" "Nebula/MeteorXL" "Custom" "StepConf Only";
 do
 	case $x in
 		"V90mk2" )
@@ -381,39 +407,30 @@ do
 			X_MAX_LIMIT=$CUSTOM_X_MAX_LIMIT
 			Y_MAX_LIMIT=$CUSTOM_Y_MAX_LIMIT
 			break;;
+		"StepConf Only" )
+			MACHINE="STEPCONF"
+			echo "StepConf Only Config"
+			echo "StepConf Only Config" >> $LOG_FILE
+			sleep 10
+			exit;;
 	esac
 done
+
 echo "MACHINE=$MACHINE" >> $LOG_FILE
 echo "MACHINE=$MACHINE" >> $CONFIG_FILE
 
-###################################################################################################
-# 	Step 3: up-rights (short or tall)
-#
-echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
-
-echo "prompt for up-right" >> $LOG_FILE
-f_prompt "Choose your up-right:"
-select x in "Short" "Tall";
-do
-	case $x in
-		"Short" )
-			UPRIGHT="SHORT"
-			break;;
-		"Tall" )
-			UPRIGHT="TALL"
-			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
-			# need Y offset for ATLaS if using TALL uprights
-			#$Y_OFFSET=
-			break;;
-	esac
-done
-
-echo "UPRIGHT=$UPRIGHT" >> $LOG_FILE
-echo "UPRIGHT=$UPRIGHT" >> $CONFIG_FILE
-echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
+# create some temporary files from our skeleton files
+echo "creating temporary files" >> $LOG_FILE
+cp .PROBOTIX.ini .TEMP.ini
+cp .PROBOTIX.hal .TEMP.hal
+cp .PYVCP.xml .TEMP.xml
+cp .POSTGUI.hal .TEMPpostgui.hal
+cp .102.ngc .TEMP102.ngc
+cp .100.ngc .TEMP100.ngc
+cp .emc.var .TEMPemc.var
 
 ###################################################################################################
-# 	Step 4: units (inch or mm)
+# 	Step 3: units (inch or mm)
 #
 echo "prompt for units" >> $LOG_FILE
 f_prompt "Choose your units:"
@@ -465,6 +482,30 @@ echo "Y_PARK=$Y_PARK" >> $LOG_FILE
 
 Z_MIN_LIMIT=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
 echo "Z_MIN_LIMIT=$Z_MIN_LIMIT" >> $LOG_FILE
+
+###################################################################################################
+# 	Step 4: up-rights (short or tall)
+#
+echo "prompt for up-right" >> $LOG_FILE
+f_prompt "Choose your up-right:"
+select x in "Short" "Tall";
+do
+	case $x in
+		"Short" )
+			UPRIGHT="SHORT"
+			break;;
+		"Tall" )
+			UPRIGHT="TALL"
+			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
+			# need Y offset for ATLaS if using TALL uprights
+			#$Y_OFFSET=
+			break;;
+	esac
+done
+
+echo "UPRIGHT=$UPRIGHT" >> $LOG_FILE
+echo "UPRIGHT=$UPRIGHT" >> $CONFIG_FILE
+echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
 
 ###################################################################################################
 # 	set G28 and G30 locations in emc.var
@@ -656,6 +697,8 @@ do
 			# remove mpg pendant from hal file
 			echo "remove mpg from hal file" >> $LOG_FILE
 			sed -i '/MPG_PENDANT/,+62d' .TEMP.hal
+			# remove unused second estop section from hal file
+			sed -i '/ESTOP_2/,+9d' .TEMP.hal
 			break;;
 		"MPG Pendant" )
 			PENDANT="MPG"
@@ -663,6 +706,8 @@ do
 			echo "remove gamepad from hal files" >> $LOG_FILE
 			sed -i '/GAMEPAD/,+1d' .TEMP.hal
 			sed -i '/GAMEPAD/,+31d' .TEMPpostgui.hal
+			# remove code for single estop usage
+			sed -i '/ESTOP_1/,+1d' .TEMP.hal
 			break;;
 		"None" )
 			PENDANT="NONE"
@@ -673,6 +718,8 @@ do
 			echo "remove gamepad from hal files" >> $LOG_FILE
 			sed -i '/GAMEPAD/,+1d' .TEMP.hal
 			sed -i '/GAMEPAD/,+31d' .TEMPpostgui.hal
+			# remove unused second estop section from hal file
+			sed -i '/ESTOP_2/,+9d' .TEMP.hal
 			break;;
 	esac
 done
@@ -701,42 +748,6 @@ do
 	esac
 done
 echo "$x" >> $LOG_FILE
-
-if [ $PENDANT = "MPG" ]
-then
-	f_prompt "Choose PARPORT for pendant use:" "keep"
-	select x in "PARPORT.1" "PARPORT.2";
-	do
-		case $x in
-			"PARPORT.1" )
-				# cfg="PARPORT0 PARPORT1PARPORT2"
-				# set parport1 as input-only by changing value of PARPORT2
-				PARPORT2=" in"
-				# comment-out reset-time for parport1 as now input-only
-				sed -i '/parport.1.reset-time/s/^/#/' .TEMP.hal
-				# remove parport2 section from hal file
-				sed -i '/PARPORT2x/,+3d' .TEMP.hal
-				# replace all instances of parport.2 with parport.1
-				sed -i -e 's/parport.2/parport.1/g' .TEMP.hal
-				break;;
-			"PARPORT.2" )
-				echo "Enter PARPORT2:"
-				read PARPORT2
-				PARPORT2=" $PARPORT2 in"
-				break;;
-		esac
-	done
-	# remove code for single estop usage
-	sed -i '/ESTOP_1/,+1d' .TEMP.hal
-else
-	PARPORT2="NONE"
-	# remove parport2 section from hal file
-	sed -i '/PARPORT2x/,+3d' .TEMP.hal
-	# remove parport2 var in hal file
-	sed -i 's/PARPORT2//' .TEMP.hal
-	# remove unused second estop section from hal file
-	sed -i '/ESTOP_2/,+9d' .TEMP.hal
-fi
 
 ###################################################################################################
 # 	Step 10: sensors (atlas or zpuck)
@@ -816,21 +827,12 @@ echo "SENSOR=$SENSOR" >> $CONFIG_FILE
 # save parports to hal file
 echo "set parport addr in hal file" >> $LOG_FILE
 sed -i -e 's/PARPORT0/'"$PARPORT0"'/' \
-	-e 's/PARPORT1/'"$PARPORT1"'/' \
-	-e 's/PARPORT2/'"$PARPORT2"'/' .TEMP.hal
-
-if [ $PARPORT2 == " in" ]
-then
-	# change back to none for logs
-	PARPORT2="NONE"
-fi
+	-e 's/PARPORT1/'"$PARPORT1 in"'/' \ .TEMP.hal
 
 echo "PARPORT0=$PARPORT0" >> $LOG_FILE
 echo "PARPORT1=$PARPORT1" >> $LOG_FILE
-echo "PARPORT2=$PARPORT2" >> $LOG_FILE
 echo "PARPORT0=$PARPORT0" >> $CONFIG_FILE
 echo "PARPORT1=$PARPORT1" >> $CONFIG_FILE
-echo "PARPORT2=$PARPORT2" >> $CONFIG_FILE
 
 ###################################################################################################
 # 	Step 11: rotary?
@@ -873,6 +875,7 @@ ZSTEP="06"
 ZDIR="07"
 ASTEP="17"
 ADIR="01"
+
 echo "prompt for driver swap" >> $LOG_FILE
 f_prompt "Do you want to swap a motor to the A-axis output?"
 select x in "X" "Y1" "Y2" "Z" "No";
@@ -974,6 +977,7 @@ MAX_LINEAR_VELOCITY=$(expr 3.34*$I | bc -l)
 if [ -d ".CONFIGS" ]
 then
 	clear
+	echo "PROBOTIX LinuxCNC Configurator Version: $VERSION" >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "ORDER_NO    =" $ORDER_NO >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "MACHINE     =" $MACHINE >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "UPRIGHT     =" $UPRIGHT >> .CONFIGS/CONFIG_DUMP.$ORDER_NO

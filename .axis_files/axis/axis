@@ -853,6 +853,16 @@ class LivePlotter:
             if self.stat.axis_mask & (1<<i) and l:
                 on_any_limit = True
         vupdate(vars.on_any_limit, on_any_limit)
+
+### ADDED BY PROBOTIX
+        vupdate(vars.current_g5x, g5x_coordinate_systems[self.stat.g5x_index])
+#       vupdate(vars.current_g5x, self.stat.g5x_index)
+        vupdate(vars.current_spindle_speed, self.stat.spindle_speed)
+#       vupdate(vars.curent_spindle_speed, coordinate_systems[self.stat.g5x_index])
+###
+
+
+
         global current_tool
         current_tool = self.stat.tool_table[0]
         if current_tool:
@@ -1582,6 +1592,13 @@ all_systems = ['P1 G54', 'P2 G55', 'P3 G56', 'P4 G57', 'P5 G58',
             'P6 G59', 'P7 G59.1', 'P8 G59.2', 'P9 G59.3',
             _('T    Tool Table')]
 
+
+### ADDED BY PROBOTIX
+g5x_coordinate_systems = ['P0 G53', 'P1 G54', 'P2 G55', 'P3 G56', 'P4 G57', 'P5 G58',
+            'P6 G59', 'P7 G59.1', 'P8 G59.2', 'P9 G59.3']
+###
+
+
 class _prompt_touchoff(_prompt_float):
     def __init__(self, title, text_pattern, default, defaultsystem):
         systems = all_systems[:]
@@ -1990,13 +2007,34 @@ class TclCommands(nf.TclCommands):
             (_("rs274ngc files"), ".ngc")) + extensions + \
             ((_("All files"), "*"),)
         f = root_window.tk.call("tk_getOpenFile", "-initialdir", open_directory,
-            "-filetypes", types, "-title", "Select Your G-code Program")
-#        f = root_window.tk.call("tk_getOpenFile", "-initialdir", open_directory)
+            "-filetypes", types, "-title", "Select Your Program")
         if not f: return
         o.set_highlight_line(None)
         f = str(f)
         open_directory = os.path.dirname(f)
         commands.open_file_name(f)
+
+#### ADDED BY PROBOTIX
+    def open_file_usb(*event):
+        if running(): return
+        global open_directory
+        all_extensions = tuple([".ngc",".tap"])
+        for e in extensions:
+            all_extensions = all_extensions + tuple(e[1])
+        types = (
+            (_("All machinable files"), all_extensions),
+            (_("rs274ngc files"), ".ngc")) + extensions + \
+            ((_("All files"), "*"),)
+        f = root_window.tk.call("tk_getOpenFile", "-initialdir", "/media/",
+            "-filetypes", types, "-title", "Select Your Program")
+        if not f: return
+        o.set_highlight_line(None)
+        f = str(f)
+        open_directory = os.path.dirname(f)
+        commands.open_file_name(f)
+###
+
+
 
     def remote (cmd,arg=""):
         if cmd == "clear_live_plot":
@@ -2459,6 +2497,59 @@ class TclCommands(nf.TclCommands):
         o.tkRedraw()        
         reload_file(False)
 
+
+
+
+
+
+
+
+
+
+### ADDED BY PROBOTIX
+    def xy_origin(event=None, new_axis_value = None):
+        global system
+        if not manual_ok(): return
+        if joints_mode(): return
+        system = vars.touch_off_system.get()
+        ensure_mode(linuxcnc.MODE_MDI)
+        s.poll()
+        offset_command = "G10 L20 %s X0 Y0" % (system.split()[0])
+        c.mdi(offset_command)
+        c.wait_complete()
+
+        ensure_mode(linuxcnc.MODE_MANUAL)
+        s.poll()
+        o.tkRedraw()        
+        reload_file(False)
+
+
+    def z_origin(event=None, new_axis_value = None):
+        global system
+        if not manual_ok(): return
+        if joints_mode(): return
+        system = vars.touch_off_system.get()
+        ensure_mode(linuxcnc.MODE_MDI)
+        s.poll()
+        offset_command = "G10 L20 %s Z0" % (system.split()[0])
+        c.mdi(offset_command)
+        c.wait_complete()
+
+        ensure_mode(linuxcnc.MODE_MANUAL)
+        s.poll()
+        o.tkRedraw()        
+        reload_file(False)
+
+    def test_button(event=None, new_axis_value = None):
+        open_directory = os.path.dirname("/home/probotix/linuxcnc/nc_files")
+        commands.open_file_name("/home/probotix/linuxcnc/nc_files/test.ngc")
+###
+
+
+
+
+
+
     def set_axis_offset(event=None):
         commands.touch_off(new_axis_value=0.)
 
@@ -2670,6 +2761,8 @@ vars = nf.Variables(root_window,
     ("touch_off_system", StringVar),
     ("machine", StringVar),
     ("on_any_limit", BooleanVar),
+    ("current_g5x", IntVar),  ### ADDED BY PROBOTIX
+    ("current_spindle_speed", IntVar), ### ADDED BY PROBOTIX
 )
 vars.linuxcnctop_command.set(os.path.join(os.path.dirname(sys.argv[0]), "linuxcnctop"))
 vars.highlight_line.set(-1)
