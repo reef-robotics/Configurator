@@ -70,7 +70,7 @@ ${pane_top}.tabs itemconfigure mdi -raisecmd "[list focus ${_tabs_mdi}.command];
 #${pane_top}.tabs raise manual
 after idle {
     ${pane_top}.tabs raise manual
-    ${pane_top}.right raise preview 
+    ${pane_top}.right raise preview
     after idle ${pane_top}.tabs compute_size
     after idle ${pane_top}.right compute_size
 }
@@ -105,12 +105,6 @@ setup_widget_accel $_tabs_manual.flood [_ Flood]
 
 grid rowconfigure $_tabs_manual 99 -weight 1
 grid columnconfigure $_tabs_manual 99 -weight 1
-# Grid widget $_tabs_manual.axes
-grid $_tabs_manual.axes \
-	-column 1 \
-	-row 0 \
-	-padx 0 \
-	-sticky w
 
 # Grid widget $_tabs_manual.axis
 grid $_tabs_manual.axis \
@@ -119,18 +113,11 @@ grid $_tabs_manual.axis \
 	-pady 1 \
 	-sticky nw
 
-# Grid widget $_tabs_manual.coolant
-grid $_tabs_manual.coolant \
-	-column 0 \
-	-row 5 \
-	-sticky w
-
-# Grid widget $_tabs_manual.flood
-grid $_tabs_manual.flood \
+# Grid widget $_tabs_manual.axes
+grid $_tabs_manual.axes \
 	-column 1 \
-	-row 6 \
-	-columnspan 2 \
-	-padx 4 \
+	-row 0 \
+	-padx 0 \
 	-sticky w
 
 # Grid widget $_tabs_manual.jogf
@@ -140,10 +127,24 @@ grid $_tabs_manual.jogf \
 	-padx 4 \
 	-sticky w
 
+# Grid widget $_tabs_manual.coolant
+grid $_tabs_manual.coolant \
+	-column 0 \
+	-row 5 \
+	-sticky w
+
 # Grid widget $_tabs_manual.mist
 grid $_tabs_manual.mist \
 	-column 1 \
 	-row 5 \
+	-columnspan 2 \
+	-padx 4 \
+	-sticky w
+
+# Grid widget $_tabs_manual.flood
+grid $_tabs_manual.flood \
+	-column 1 \
+	-row 6 \
 	-columnspan 2 \
 	-padx 4 \
 	-sticky w
@@ -158,19 +159,19 @@ grid $_tabs_manual.space2 \
 	-column 0 \
 	-row 4
 
-# Grid widget $_tabs_manual.spindlef
-grid $_tabs_manual.spindlef \
-	-column 1 \
-	-row 3 \
-	-padx 4 \
-	-sticky w
-
 # Grid widget $_tabs_manual.spindlel
 grid $_tabs_manual.spindlel \
 	-column 0 \
 	-row 3 \
 	-pady 2 \
 	-sticky nw
+
+# Grid widget $_tabs_manual.spindlef
+grid $_tabs_manual.spindlef \
+	-column 1 \
+	-row 3 \
+	-padx 4 \
+	-sticky w
 
 
 
@@ -256,7 +257,7 @@ label .info.commanded_spindle_speed \
 	-relief sunken \
 	-textvariable current_spindle_speed \
 	-width 25
-	
+
 ### END BOTTOM INFO BAR
 
 
@@ -707,7 +708,7 @@ proc update_state {args} {
     relief {$task_state == $STATE_ESTOP} .toolbar.machine_estop
     state  {$task_state != $STATE_ESTOP} \
         .toolbar.machine_power {.menu.machine "Toggle _Machine Power"}
-    relief {$task_state == $STATE_ON}    .toolbar.machine_power 
+    relief {$task_state == $STATE_ON}    .toolbar.machine_power
 
     state  {$interp_state == $INTERP_IDLE && $taskfile != ""} \
         .toolbar.reload {.menu.file "_Reload"}
@@ -828,10 +829,10 @@ proc joint_mode_switch {args} {
         grid forget $::_tabs_manual.joints
         grid $::_tabs_manual.axes -column 1 -row 0 -padx 0 -pady 0 -sticky w
         setup_widget_accel $::_tabs_manual.axis [_ Axis:]
-    }    
+    }
 }
 
-proc queue_update_state {args} { 
+proc queue_update_state {args} {
     after cancel update_state
     after idle update_state
 }
@@ -903,8 +904,8 @@ foreach c {Entry Spinbox} {
 
     foreach b { Left Right
             Up Down Prior Next Home
-            Left Right Up Down 
-            Prior Next Home 
+            Left Right Up Down
+            Prior Next Home
             End } {
         bind $c <KeyPress-$b> {+if {[%W cget -state] == "normal"} break}
         bind $c <KeyRelease-$b> {+if {[%W cget -state] == "normal"} break}
@@ -1018,7 +1019,7 @@ proc places {s1 s2} {
     for {set i 15} {$i < $l1 && $i < $l2} {incr i} {
         set c1 [string index $s1 $i]
         set c2 [string index $s2 $i]
-        if {$c1 != "0" && $c1 != "." && $c1 != $c2} { return $i } 
+        if {$c1 != "0" && $c1 != "." && $c1 != $c2} { return $i }
     }
     return [string length $s1]
 }
@@ -1154,7 +1155,7 @@ DynamicHelp::add $_tabs_manual.jogf.jog.jogincr -text [_ "Select jog increment"]
 # beginning with "." from the open dialog.  Who knows what it does on other
 # versions.
 catch {
-    auto_load ::tk::dialog::file:: 
+    auto_load ::tk::dialog::file::
     namespace eval ::tk::dialog::file {}
     set ::tk::dialog::file::showHiddenBtn 1
     set ::tk::dialog::file::showHiddenVar 0

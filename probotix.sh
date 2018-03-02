@@ -2,78 +2,11 @@
 # 	PROBOTIX LinuxCNC Configurator
 # 	zip file created Thu Jan  4 13:41:19 CST 2018
 #
-# 	Copyright 2016 PROBOTIX
-# 	Written by Len Shelton
-# 	Version 1.0 release  Mar 29 2016
+# 	Copyright 2018 PROBOTIX
+# 	Originally written by Len Shelton
+# 	Modified by Kaden Lewis
 #
-# 	Rev 1.1	Bug fixes
-# 	Rev 1.2	Bug Fixes
-# 	Rev 1.3
-# 		Added PyVCP buttons
-# 		Hard Coded G28 & G30 buttons to G53 coordinates
-# 		Hard Coded ATLaS location to G53 coordinates
-# 		Fixed o102 bug
-# 		Consolidated o100 & o101
-# 	Rev 1.4
-# 		Added php installer
-# 		Added lspci dump to text file
-# 		Misc bug fixes
-# 		Fix o100: check for already tool loaded and measured
-# 		Added router mount chooser to fix ATLaS Y offset
-# 	Rev 1.5
-# 		Added grab_errors.sh script to copy startup errors to thumb drive
-# 		Added custom show_errors.tcl to display location of debug files
-# 	Rev 1.6
-# 		Set G28 and G30 locations in emc.var
-# 		Added key binding "q" to pause/resume toggle
-# 	Rev 1.7
-# 		Changed Z min to 10 to check possible G43 problems
-# 		Added o130 helical interpolation subroutine
-# 	Rev 1.8
-# 		Create log file
-# 		Started separating prompts from other stuff so that we can implement defaults and load prior config
-# 		Turned off g-zip stdout output
-# 		Added MPG pendant support on PARPORT2
-# 		Increased max velocity on rotary axis to 2 revs/second
-# 		Discovered 8192cu.ko module installation procedure
-# 		Fixed panel.xml case issue
-# 	Rev 1.9
-# 		Prompt for which PARPORT to use for pendant and remove unused PARPORT2 if necessary
-# 		Remove second e-stop code if not in use
-# 		Remove references to a-axis if no rotary present
-# 		Added HAL code for a-axis rotation jogging
-# 		Removed YEAR from shortcut name
-# 		Added prompt for up-rights type/height
-# 		Added prompt for SuperPID
-# 		General code cleanup and unified formatting
-# 	Rev 1.9.2
-# 		Fix for incorrectly writting to existing log before backing up
-# 		Removed quotes from literal numbers
-# 		Replaced Windows end of line CRLF with Unix LF
-# 		Minor syntax corrections
-# 		Remove duplicate code in HAL for Router when using SPID
-# 	Rev 2.0
-#			Major Axis GUI update
-#			Removed PARPORT2, joined it into PARPORT1, set PARPORT1 to "in"
-#			Changed ZMIN to 5.7 to match new taller machines
-#
-# 	Todo:
-# 		Fix missing NGC startup file causes o100 to not be found
-# 		Fix RS274_STARTUP_CODE to clear tool and offset
-# 		Clear preview history after homing
-# 		Make insmod edimax permanent
-# 		Probe from shorter height
-# 		Add key bindings for rotary jog
-# 		Add support for older gamepads
-# 		Check for error on script keyboard input
-# 		Finish ngc2 filter
-# 		Rotate g-code functions
-# 		Update sample g-code programs
-# 		Update table grid and threaded insert programs
-# 		Increase debounce time for limits only
-# 		Put axis files back in original directories
-#
-_VERSION="2.0"
+_VERSION="2.1.0"
 
 ###################################################################################################
 # 	some functions
@@ -90,6 +23,20 @@ f_prompt() {
 	printf '%s\n' "$1"
 }
 
+f_exit () {
+	f_prompt "Configuration Complete"
+	if [ $REBOOT == 1 ]
+	then
+		echo "Please reboot the PC to apply changes."
+	else
+		echo "No need to reboot. Restart LinuxCNC to apply changes."
+	fi
+	echo
+	echo "This window will close in 10 seconds"
+
+	sleep 10
+	exit
+}
 ###################################################################################################
 # 	some variables
 #
@@ -172,9 +119,27 @@ fi
 
 # set version to this script
 VERSION=$_VERSION
-echo "DATE=$DATETIME" >> $CONFIG_FILE
-echo "VERSION=$VERSION" >> $CONFIG_FILE
 echo "this config run version $VERSION at $DATETIME" >> $LOG_FILE
+
+###################################################################################################
+# 	Step 0: installation type (new or upgrade)
+#
+echo "prompt for install type" >> $LOG_FILE
+f_prompt "New install or upgrade existing?:"
+read INSTALL_TYPE
+select x in "New Install" "Upgrade Existing";
+do
+	case $x in
+		"New Install" )
+			INSTALL_TYPE="NEW"
+			break;;
+		"Upgrade Existing" )
+			INSTALL_TYPE="UPGRADE"
+			break;;
+	esac
+done
+
+echo "INSTALL_TYPE=$INSTALL_TYPE" >> $LOG_FILE
 
 ###################################################################################################
 # 	set num lock
@@ -238,6 +203,95 @@ else
 fi
 
 ###################################################################################################
+# 	misc setup stuff
+#
+# set the default editor for .ngc files
+sudo cp -f .freedesktop.org.xml /usr/share/mime/packages/freedesktop.org.xml
+sudo update-mime-database /usr/share/mime
+echo "set default editor for .ngc files" >> $LOG_FILE
+
+if [ $INSTALL_TYPE == "NEW" ]
+then
+	# remove the desktop icons
+	rm -Rf /home/probotix/Desktop/*.desktop
+	rm -f /home/probotix/Desktop/nc_files
+	echo "remove desktop icons" >> $LOG_FILE
+
+	# delete and recreate the linuxcnc directory
+	rm -Rf /home/probotix/linuxcnc
+	mkdir -p /home/probotix/linuxcnc/configs/PROBOTIX/axis
+	mkdir -p /home/probotix/linuxcnc/nc_files
+	echo "remove and recreate LinuxCNC dir" >> $LOG_FILE
+fi
+cp -R .nc_files/* /home/probotix/linuxcnc/nc_files
+sudo cp -f .probotix_splash.gif /usr/share/linuxcnc/probotix_splash.gif
+echo "copy nc_files and splash" >> $LOG_FILE
+
+# copy custom stepconf
+sudo cp -f .stepconf /usr/bin/stepconf
+#/usr/share/applications/linuxcnc-stepconf.desktop
+#/usr/share/linuxcnc/stepconf.glade
+echo "copy custom stepconf" >> $LOG_FILE
+
+# create symlink to axis program
+sudo rm -f /usr/bin/axis
+sudo rm -Rf /usr/share/axis
+cp -Rud .axis_files/axis/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
+sudo ln -s /home/probotix/linuxcnc/configs/PROBOTIX/axis/axis /usr/bin/axis
+sudo ln -s /home/probotix/linuxcnc/configs/PROBOTIX/axis /usr/share/axis
+echo "create symlink to axis" >> $LOG_FILE
+
+# install fixed tooledit
+sudo cp -f .tooledit /usr/bin/tooledit
+echo "copy fixed tooledit" >> $LOG_FILE
+
+# install customized files
+sudo cp -f .show_errors.tcl /usr/lib/tcltk/linuxcnc/show_errors.tcl
+echo "copy customized files" >> $LOG_FILE
+
+# set desktop background
+SCREEN_WIDTH=$(xrandr --current | grep '*' | uniq | awk '{print $1}' | cut -d 'x' -f1)
+cp -f .$SCREEN_WIDTH*probotix_background.png /home/probotix/Pictures/.background.png
+gconftool-2 -t string -s /desktop/gnome/background/picture_filename /home/probotix/Pictures/.background.png
+echo "set desktop background" >> $LOG_FILE
+
+# turn off the screen-saver and idle login
+gconftool-2 --type bool --set /apps/gnome-screensaver/lock_enabled 0
+gconftool-2 --type bool --set /apps/gnome-screensaver/idle_activation_enabled 0
+echo "disable screen-saver/idle login" >> $LOG_FILE
+
+# turn on line numbers in gedit
+gconftool-2 --type bool --set /apps/gedit-2/preferences/editor/line_numbers/display_line_numbers true
+echo "gedit line numbers" >> $LOG_FILE
+
+# remove the update manager so that folks can't break linuxcnc with a software update
+sudo apt-get -qq -y remove update-manager
+echo "remove update-manager" >> $LOG_FILE
+
+if [ $INSTALL_TYPE == "UPGRADE" ]
+then
+	# no need to create temp files or prompt for other info, simply close
+	echo "Upgrade of Installation Complete" >> $LOG_FILE
+	f_exit
+fi
+
+# create the config file
+echo "DATE=$DATETIME" >> $CONFIG_FILE
+echo "VERSION=$VERSION" >> $CONFIG_FILE
+echo "SCREEN_WIDTH=$SCREEN_WIDTH" >> $CONFIG_FILE
+
+# create some temporary files from our skeleton files
+cp .PROBOTIX.ini .TEMP.ini
+cp .PROBOTIX.hal .TEMP.hal
+cp .PYVCP.xml .TEMP.xml
+cp .POSTGUI.hal .TEMPpostgui.hal
+cp .102.ngc .TEMP102.ngc
+cp .100.ngc .TEMP100.ngc
+cp .emc.var .TEMPemc.var
+cp .icon.desktop .TEMP.desktop
+echo "create temporary files" >> $LOG_FILE
+
+###################################################################################################
 # 	this section tries to identify the add-on parallel port address
 #
 LSPCI=$(lspci -v | grep NetMos)
@@ -287,81 +341,15 @@ case $ORDER_NO in
 		sleep 1
 		echo "FACTORY INSTALL" >> $LOG_FILE
 		break;;
-	999 )
+	* )
 		clear
-		echo "UPGRADE INSTALL"
-		sleep 1
-		echo "UPGRADE INSTALL" >> $LOG_FILE
+		echo "CUSTOMER INSTALL"
 		break;;
 esac
 
 ###################################################################################################
-# 	misc setup stuff
-#
-# set the default editor for .ngc files
-sudo cp -f .freedesktop.org.xml /usr/share/mime/packages/freedesktop.org.xml
-sudo update-mime-database /usr/share/mime
-echo "setting default editor for .ngc files" >> $LOG_FILE
-
-# remove the desktop icons
-rm -Rf /home/probotix/Desktop/*.desktop
-rm -f /home/probotix/Desktop/nc_files
-
-# delete and recreate the linuxcnc directory
-if [ $ORDER_NO -ne 999]
-then
-	rm -Rf /home/probotix/linuxcnc
-	mkdir -p /home/probotix/linuxcnc/configs/PROBOTIX/axis
-	mkdir -p /home/probotix/linuxcnc/nc_files
-fi
-
-cp -R .nc_files/* /home/probotix/linuxcnc/nc_files
-sudo cp .probotix_splash.gif /usr/share/linuxcnc/probotix_splash.gif
-
-# copy custom stepconf
-sudo cp -f .stepconf /usr/bin/stepconf
-#/usr/share/applications/linuxcnc-stepconf.desktop
-#/usr/share/linuxcnc/stepconf.glade
-
-# create symlink to axis program
-sudo rm -f /usr/bin/axis
-sudo rm -Rf /usr/share/axis
-cp -Rud .axis_files/axis/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
-sudo ln -s /home/probotix/linuxcnc/configs/PROBOTIX/axis/axis /usr/bin/axis
-sudo ln -s /home/probotix/linuxcnc/configs/PROBOTIX/axis /usr/share/axis
-
-# install fixed tooledit
-sudo cp .tooledit /usr/bin/tooledit
-
-# install customized files
-sudo cp .show_errors.tcl /usr/lib/tcltk/linuxcnc/show_errors.tcl
-
-# set desktop background
-SCREEN_WIDTH=$(xrandr --current | grep '*' | uniq | awk '{print $1}' | cut -d 'x' -f1)
-cp -f .$SCREEN_WIDTH*probotix_background.png /home/probotix/Pictures/.background.png
-gconftool-2 -t string -s /desktop/gnome/background/picture_filename /home/probotix/Pictures/.background.png
-echo "set desktop background" >> $LOG_FILE
-echo "SCREEN_WIDTH=$SCREEN_WIDTH" >> $CONFIG_FILE
-
-# turn off the screen-saver and idle login
-gconftool-2 --type bool --set /apps/gnome-screensaver/lock_enabled 0
-gconftool-2 --type bool --set /apps/gnome-screensaver/idle_activation_enabled 0
-echo "disable screen-saver/idle login" >> $LOG_FILE
-
-# turn on line numbers in gedit
-gconftool-2 --type bool --set /apps/gedit-2/preferences/editor/line_numbers/display_line_numbers true
-echo "gedit line numbers" >> $LOG_FILE
-
-# remove the update manager so that folks can't break linuxcnc with a software update
-sudo apt-get -qq -y remove update-manager
-echo "remove update-manager" >> $LOG_FILE
-
-###################################################################################################
 # 	Step 2: machine
 #
-# needs to be at least 5.7 for taller up-rights to avoid crimping cable
-ZMINLIM=5.7
-
 echo "prompt for machine" >> $LOG_FILE
 f_prompt "Choose your machine:"
 select x in "V90mk2" "Comet" "Asteroid" "Meteor" "Nebula/MeteorXL" "Custom" "StepConf Only";
@@ -407,30 +395,62 @@ do
 			X_MAX_LIMIT=$CUSTOM_X_MAX_LIMIT
 			Y_MAX_LIMIT=$CUSTOM_Y_MAX_LIMIT
 			break;;
-		"StepConf Only" )
-			MACHINE="STEPCONF"
-			echo "StepConf Only Config"
-			echo "StepConf Only Config" >> $LOG_FILE
-			sleep 10
-			exit;;
 	esac
 done
 
 echo "MACHINE=$MACHINE" >> $LOG_FILE
 echo "MACHINE=$MACHINE" >> $CONFIG_FILE
 
-# create some temporary files from our skeleton files
-echo "creating temporary files" >> $LOG_FILE
-cp .PROBOTIX.ini .TEMP.ini
-cp .PROBOTIX.hal .TEMP.hal
-cp .PYVCP.xml .TEMP.xml
-cp .POSTGUI.hal .TEMPpostgui.hal
-cp .102.ngc .TEMP102.ngc
-cp .100.ngc .TEMP100.ngc
-cp .emc.var .TEMPemc.var
+###################################################################################################
+# 	Step 3a: up-rights (short or tall)
+#
+echo "prompt for up-right" >> $LOG_FILE
+f_prompt "Choose your up-right:"
+select x in "Tall" "Short";
+do
+	case $x in
+		"Short" )
+			UPRIGHT="SHORT"
+			break;;
+		"Tall" )
+			UPRIGHT="TALL"
+			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
+			# need Y offset for ATLaS if using TALL uprights
+			#$Y_OFFSET=
+			break;;
+	esac
+done
+
+echo "UPRIGHT=$UPRIGHT" >> $LOG_FILE
+echo "UPRIGHT=$UPRIGHT" >> $CONFIG_FILE
+echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
 
 ###################################################################################################
-# 	Step 3: units (inch or mm)
+# 	Step 3b: z bearings (2 or 4)
+#			number of bearings and their placement determins Z-axis travel
+#
+echo "prompt for z bearings" >> $LOG_FILE
+f_prompt "Number of Z bearings:"
+select x in "Four" "Two";
+do
+	case $x in
+		"Two" )
+			ZBEARINGS="2"
+			# needs to be at least 5.7 to avoid crimping cable
+			ZMINLIM=5.7
+			break;;
+		"Four" )
+			ZBEARINGS="4"
+			ZMINLIM=4.7
+			break;;
+	esac
+done
+
+echo "ZBEARINGS=$ZBEARINGS" >> $LOG_FILE
+echo "ZBEARINGS=$ZBEARINGS" >> $CONFIG_FILE
+
+###################################################################################################
+# 	Step 4: units (inch or mm)
 #
 echo "prompt for units" >> $LOG_FILE
 f_prompt "Choose your units:"
@@ -484,30 +504,6 @@ Z_MIN_LIMIT=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
 echo "Z_MIN_LIMIT=$Z_MIN_LIMIT" >> $LOG_FILE
 
 ###################################################################################################
-# 	Step 4: up-rights (short or tall)
-#
-echo "prompt for up-right" >> $LOG_FILE
-f_prompt "Choose your up-right:"
-select x in "Short" "Tall";
-do
-	case $x in
-		"Short" )
-			UPRIGHT="SHORT"
-			break;;
-		"Tall" )
-			UPRIGHT="TALL"
-			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
-			# need Y offset for ATLaS if using TALL uprights
-			#$Y_OFFSET=
-			break;;
-	esac
-done
-
-echo "UPRIGHT=$UPRIGHT" >> $LOG_FILE
-echo "UPRIGHT=$UPRIGHT" >> $CONFIG_FILE
-echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $LOG_FILE
-
-###################################################################################################
 # 	set G28 and G30 locations in emc.var
 #
 echo "set G28 and G30 locations in emc.var" >> $LOG_FILE
@@ -526,10 +522,8 @@ do
 	case $x in
 		"Router" )
 			echo "prompt for superpid" >> $LOG_FILE
-			clear
-			echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-			echo "Do you have a SuperPID?:"
-			select y in "Yes" "No";
+			f_prompt "Do you have a SuperPID?:"
+			select y in "No" "Yes";
 			do
 				case $y in
 					"Yes" )
@@ -583,9 +577,7 @@ ATLAS_X=-0.075
 if [ $SPINDLE == "ROUTER" ]
 then
 	echo "prompt for router mount" >> $LOG_FILE
-	clear
-	echo "PROBOTIX LinuxCNC Configurator Version: $VERSION"
-	echo "Choose Your Router Mount:"
+	f_prompt "Choose Your Router Mount:"
 	select x in "One-Piece Long Center" "Two-Piece Short Center" "Two-Piece Long Center";
 	do
 		case $x in
@@ -622,8 +614,6 @@ echo "ATLAS_Y=$ATLAS_Y" >> $LOG_FILE
 echo "hard code ATLaS offset in 100.ngc" >> $LOG_FILE
 sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMP100.ngc
 sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMP100.ngc
-# disabled - variable does not exist in file any more?
-#sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .nc_files/utilities/table_extents.ngc
 
 # set G59.3 offset to center of ATLaS
 echo "set G59.3 offset to center of ATLaS" >> $LOG_FILE
@@ -635,7 +625,7 @@ sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMPemc.var
 #
 echo "prompt for acme" >> $LOG_FILE
 f_prompt "Choose your ACME screw:"
-select x in "Roton" "Helix";
+select x in "Helix" "Roton";
 do
 	case $x in
 		"Roton" )
@@ -663,7 +653,7 @@ sed -i -e 's/REPLACE_ZVELOCITY/'"Z_MAXVEL"'/' .TEMP.ini
 #
 echo "prompt for drivers" >> $LOG_FILE
 f_prompt "Choose your drivers:"
-select x in "ProboStep" "MondoStep";
+select x in "MondoStep" "ProboStep";
 do
 	case $x in
 		"ProboStep" )
@@ -689,7 +679,7 @@ echo "ZSCALE=$ZSCALE" >> $LOG_FILE
 #
 echo "prompt for gamepad" >> $LOG_FILE
 f_prompt "Do you use the Gamepad or MPG pendant?"
-select x in "Gamepad" "MPG Pendant" "None";
+select x in "None" "Gamepad" "MPG Pendant";
 do
 	case $x in
 		"Gamepad" )
@@ -731,7 +721,6 @@ echo "PENDANT=$PENDANT" >> $CONFIG_FILE
 #
 PARPORT0="0x378"
 PARPORT1=$IDENTB
-#PARPORT2="0xd030"
 echo "prompt confirm parport addr" >> $LOG_FILE
 f_prompt "PARPORT.0 $PARPORT0, PARPORT.1 $PARPORT1 Okay?"
 select x in "Yes" "No";
@@ -740,7 +729,8 @@ do
 		"Yes" )
 			break;;
 		"No" )
-			f_prompt "Enter PARPORT0:"
+			echo
+			echo "Enter PARPORT0:"
 			read PARPORT0
 			echo "Enter PARPORT1:"
 			read PARPORT1
@@ -756,7 +746,7 @@ ZPUCK="NONE"
 
 echo "prompt for options" >> $LOG_FILE
 f_prompt "Do you use the ATLaS Tool Length Sensor or the Z-Puck?"
-select x in "ATLaS only" "Z-Puck only" "Both" "None" "Swap Parallel Ports";
+select x in "None" "ATLaS only" "Z-Puck only" "Both" "Swap Parallel Ports";
 do
 	case $x in
 		"ATLaS only" )
@@ -827,11 +817,11 @@ echo "SENSOR=$SENSOR" >> $CONFIG_FILE
 # save parports to hal file
 echo "set parport addr in hal file" >> $LOG_FILE
 sed -i -e 's/PARPORT0/'"$PARPORT0"'/' \
-	-e 's/PARPORT1/'"$PARPORT1 in"'/' \ .TEMP.hal
+	-e 's/PARPORT1/'"$PARPORT1 in"'/' .TEMP.hal
 
 echo "PARPORT0=$PARPORT0" >> $LOG_FILE
-echo "PARPORT1=$PARPORT1" >> $LOG_FILE
 echo "PARPORT0=$PARPORT0" >> $CONFIG_FILE
+echo "PARPORT1=$PARPORT1" >> $LOG_FILE
 echo "PARPORT1=$PARPORT1" >> $CONFIG_FILE
 
 ###################################################################################################
@@ -839,7 +829,7 @@ echo "PARPORT1=$PARPORT1" >> $CONFIG_FILE
 #
 echo "prompt for rotary axis" >> $LOG_FILE
 f_prompt "Do you have the rotary axis?"
-select xa in "Yes" "No";
+select xa in "No" "Yes";
 do
 	case $xa in
 		"Yes" )
@@ -878,7 +868,7 @@ ADIR="01"
 
 echo "prompt for driver swap" >> $LOG_FILE
 f_prompt "Do you want to swap a motor to the A-axis output?"
-select x in "X" "Y1" "Y2" "Z" "No";
+select x in "No" "X" "Y1" "Y2" "Z";
 do
 	case $x in
 		"X" )
@@ -933,13 +923,14 @@ sed -i -e "s/XSTEP/$XSTEP/" \
 	-e "s/ZDIR/$ZDIR/" \
 	-e "s/ASTEP/$ASTEP/" \
 	-e "s/ADIR/$ADIR/" .TEMP.hal
+echo "set axis pins in hal file" >> $LOG_FILE
 
 ###################################################################################################
 # 	Step 13: soft limits only
 #
 echo "prompt for soft limits" >> $LOG_FILE
 f_prompt "Do you want to use soft limits only?"
-select x in "Yes" "No";
+select x in "No" "Yes";
 do
 	case $x in
 		"Yes" )
@@ -972,6 +963,7 @@ XY_LATCH_VEL=$(expr 0.2*$I | bc -l)
 Z_LATCH_VEL=$(expr 0.2*$I | bc -l)
 DEFAULT_VELOCITY=$(expr 3.34*$I | bc -l)
 MAX_LINEAR_VELOCITY=$(expr 3.34*$I | bc -l)
+echo "metricify axis vars" >> $LOG_FILE
 
 # folder should only exist during factory install
 if [ -d ".CONFIGS" ]
@@ -981,6 +973,7 @@ then
 	echo "ORDER_NO    =" $ORDER_NO >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "MACHINE     =" $MACHINE >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "UPRIGHT     =" $UPRIGHT >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
+	echo "ZBEARINGS   =" $ZBEARINGS >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "UNITS       =" $UNITS >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "ACME        =" $ACME >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "DRIVERS     =" $DRIVERS >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
@@ -1015,6 +1008,7 @@ then
 	echo "Z_LATCH_VEL =" $Z_LATCH_VEL >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "DEF_VELOCITY=" $DEFAULT_VELOCITY >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
 	echo "MAX_LIN_VEL =" $MAX_LINEAR_VELOCITY >> .CONFIGS/CONFIG_DUMP.$ORDER_NO
+	echo "config dump" >> $LOG_FILE
 fi
 
 # was 0.08
@@ -1054,17 +1048,19 @@ sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' \
 	-e 's/REPLACE_INC/'"$REPLACE_INC"'/' \
 	-e 's/REPLACE_X_PARK/'"$X_PARK"'/' \
 	-e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMP.ini
+echo "replace vars in ini file" >> $LOG_FILE
 
 ###################################################################################################
 #		Save the TEMP files
 #
 # create link to LinuxCNC on desktop
-cp .icon.desktop .TEMP.desktop
 sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' .TEMP.desktop
 cp .TEMP.desktop /home/probotix/Desktop/$MACHINE.desktop
+echo "save LinuxCNC desktop link" >> $LOG_FILE
 
 # create link to nc_files on desktop
 ln -sf /home/probotix/linuxcnc/nc_files/ /home/probotix/Desktop/nc_files
+echo "create nc_files desktop link" >> $LOG_FILE
 
 # move the temp files to LinuxCNC dir
 cp .TEMP.ini /home/probotix/linuxcnc/configs/PROBOTIX/probotix.ini
@@ -1076,21 +1072,13 @@ cp .emc.nml  /home/probotix/linuxcnc/configs/PROBOTIX/emc.nml
 cp .TEMPemc.var  /home/probotix/linuxcnc/configs/PROBOTIX/emc.var
 cp .TEMP102.ngc /home/probotix/linuxcnc/nc_files/subs/102.ngc
 cp .TEMP100.ngc /home/probotix/linuxcnc/nc_files/subs/100.ngc
+echo "save temp files to LinuxCNC dir" >> $LOG_FILE
 
 # remove remaining temp files
 rm -f .TEMP*
+echo "remove temp files" >> $LOG_FILE
 
 ###################################################################################################
 #		End
 #
-f_prompt "Configuration Complete"
-if [ $REBOOT == 1 ]
-then
-	echo "Please reboot the PC to apply changes."
-else
-	echo "No need to reboot. Restart LinuxCNC to apply changes."
-fi
-echo
-echo "This window will close in 10 seconds"
-
-sleep 10
+f_exit

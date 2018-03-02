@@ -1,0 +1,140 @@
+# Changelog for PROBOTIX LinuxCNC Configurator
+
+## Given a version number MAJOR.MINOR.PATCH, increment the:
+- MAJOR version when you make incompatible API changes,
+- MINOR version when you add functionality in a backwards-compatible manner, and
+- PATCH version when you make backwards-compatible bug fixes.
+
+## Types of changes
+- Added for new features.
+- Changed for changes in existing functionality.
+- Deprecated for soon-to-be removed features.
+- Removed for now removed features.
+- Fixed for any bug fixes.
+- Security in case of vulnerabilities.
+
+## Todo:
+- Fix missing NGC startup file causes o100 to not be found
+- Fix RS274_STARTUP_CODE to clear tool and offset
+- Make insmod edimax permanent
+- Probe from shorter height
+- Add key bindings for rotary jog
+- Add support for older gamepads
+- Check for error on script keyboard input
+- Finish ngc2 filter
+- Rotate g-code functions
+- Update sample g-code programs
+- Update table grid and threaded insert programs
+- Increase debounce time for limits only
+- Put axis files back in original directories
+
+## [Unreleased]
+
+## [2.1.0] - 2018-03-01
+### Added
+- More action logging
+- Prompt for number of bearings on Z-axis to determine travel distance
+- Prompt for type of install (new or upgrade)
+### Changed
+- Moved CHANGELOG into this separate file
+- Created exit function
+- Rearranged some sections
+- Delayed CONFIG file creation
+- Rearranged options so default is always "1"
+### Removed
+- StepConf Only option as it left behind temp files
+### Fixed
+- Bug caused by missing space in IF condition
+- Bug caused by leftover backslash on line for saving PARPORT addresses
+
+## [2.0.0] - 2018-02-12
+### Changed
+- Major Axis GUI update
+- Clear Axis preview history after homing
+- ZMIN to 5.7 to match new taller machines
+### Removed
+- PARPORT2, joined it into PARPORT1, set PARPORT1 to "in"
+
+## [1.10.0] - 2018-02-10
+## Changed
+- Created function to handle printing prompts
+
+## [1.9.2] - 2018-01-18
+### Changed
+- Windows end of line CRLF with Unix LF
+- Minor syntax corrections
+### Removed
+- Quotes from literal numbers
+- Duplicate code in HAL for Router when using SPID
+### Fix
+- Incorrectly writing to existing log before backing up
+
+## [1.9.0] - 2018-01-09
+### Added
+- Prompt for which PARPORT to use for pendant and remove unused PARPORT2 if necessary
+- HAL code for A-axis rotation jogging
+- Prompt for up-rights type/height
+- Prompt for SuperPID
+### Changed
+- General code cleanup and unified formatting
+### Removed
+- Second e-stop code if not in use
+- References to a-axis if no rotary present
+- YEAR from shortcut name
+
+## [1.8]
+### Added
+- Log file
+- MPG pendant support on PARPORT2
+- Discovered 8192cu.ko module installation procedure
+### Changed
+- Started separating prompts from other stuff so that we can implement defaults and load prior config
+- Increased max velocity on rotary axis to 2 revs/second
+### Removed
+- Turned off g-zip stdout output
+### Fixed
+- Case issue with panel.xml
+
+## [1.7]
+### Added
+- o130 helical interpolation subroutine
+### Changed
+- Z min to 10 to check possible G43 problems
+
+## [1.6]
+### Added
+- Key binding "q" to pause/resume toggle
+### Changed
+- Set G28 and G30 locations in emc.var
+
+## [1.5]
+### Added
+- grab_errors.sh script to copy startup errors to thumb drive
+- Custom show_errors.tcl to display location of debug files
+
+## [1.4]
+### Added
+- PHP installer
+- LSPCI dump to text file
+- Router mount chooser to fix ATLaS Y offset
+### Fix
+- o100: check for already tool loaded and measured
+- Misc bug fixes
+
+## [1.3]
+### Added
+- PyVCP buttons
+### Changed
+- Hard Coded G28 & G30 buttons to G53 coordinates
+- Hard Coded ATLaS location to G53 coordinates
+- Consolidated o100 & o101
+### Fixed
+- o102 bug
+
+## [1.2]
+- Bug Fixes
+
+## [1.1]
+- Bug fixes
+
+## [1.0] - 2016-03-29

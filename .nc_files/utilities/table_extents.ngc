@@ -18,9 +18,10 @@ G64 P0.01
 #4 = -0.03 (depth)
 #5 = 0.1 (z safe)
 #6 = [#5223] (5223 is G54 Z offset)
-(#7 = REPLACE_ATLAS_Y) (center of ATLaS hole)
+(#7 = [#5381]) (center of ATLaS X)
+(#8 = [#5382]) (center of ATLaS Y)
 
-G10 L2 P9 X-0.075 Y3.5533 Z[#6]	(G59.3 used for arc around tool sensor)
+G10 L2 P9 X[#7] Y[#8] Z[#6]	(G59.3 used for arc around tool sensor)
 (G10 L2 P1 X1.5 Y0.5 )
 G10 L2 P8 X1.5 Y0.5 Z[#6] (G59.2 will be used for grid)
 
