@@ -30,6 +30,10 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2018-03-02
+### Changed
+- Moved CONFIG_DUMP location outside of Configurator dir to persist across updates
+
 ## [2.1.0] - 2018-03-01
 ### Added
 - More action logging
