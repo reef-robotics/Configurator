@@ -1,6 +1,3 @@
-.axis_files
-.numlockx
-.php
-.python
-.CONFIGS
+.axis_files/axis/images.bkup/**
+.CONFIGS/**
 LSPCI.txt
