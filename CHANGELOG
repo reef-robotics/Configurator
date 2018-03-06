@@ -30,6 +30,11 @@
 
 ## [Unreleased]
 
+## [2.2.1] - 2018-03-06
+### Fixed
+- Bug stuck in mm caused by units in CAPS so changed back to lowercase
+- Commented out parport.1.reset-time line as input only now
+
 ## [2.2.0] - 2018-03-02
 ### Changed
 - Moved CONFIG_DUMP location outside of Configurator dir to persist across updates

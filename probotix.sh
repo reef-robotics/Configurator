@@ -6,7 +6,7 @@
 # 	Originally written by Len Shelton
 # 	Modified by Kaden Lewis
 #
-_VERSION="2.2.0"
+_VERSION="2.2.1"
 
 ###################################################################################################
 # 	some variables
@@ -128,7 +128,6 @@ echo "this config run version $VERSION at $DATETIME" >> $LOG_FILE
 #
 echo "prompt for install type" >> $LOG_FILE
 f_prompt "New install or upgrade existing?:"
-read INSTALL_TYPE
 select x in "New Install" "Upgrade Existing";
 do
 	case $x in
@@ -460,7 +459,7 @@ select x in "Inch" "Metric";
 do
 	case $x in
 		"Inch" )
-			UNITS="INCH"
+			UNITS="inch"
 			I=1
 			UNIT_DESC="(X.XXX in inches)"
 			UNIT_DESC_BIG="(XX.XXX in inches)"
@@ -469,7 +468,7 @@ do
 			GUNITS="G20"
 			break;;
 		"Metric" )
-			UNITS="MM"
+			UNITS="mm"
 			I=25.4
 			UNIT_DESC="(XX.XX in mm)"
 			UNIT_DESC_BIG="(XXXX.XX in mm)"

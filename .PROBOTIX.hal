@@ -5,7 +5,7 @@ loadrt [EMCMOT]EMCMOT base_period_nsec=[EMCMOT]BASE_PERIOD servo_period_nsec=[EM
 #loadrt probe_parport
 loadrt hal_parport cfg="PARPORT0 PARPORT1"
 setp parport.0.reset-time 5000
-setp parport.1.reset-time 5000
+#setp parport.1.reset-time 5000
 loadrt stepgen step_type=0,0,0,0
 
 
