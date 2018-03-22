@@ -18,17 +18,28 @@
 - Fix RS274_STARTUP_CODE to clear tool and offset
 - Make insmod edimax permanent
 - Probe from shorter height
-- Add key bindings for rotary jog
 - Add support for older gamepads
 - Check for error on script keyboard input
 - Finish ngc2 filter
 - Rotate g-code functions
 - Update sample g-code programs
-- Update table grid and threaded insert programs
 - Increase debounce time for limits only
 - Put axis files back in original directories
 
 ## [Unreleased]
+
+## [2.2.2] - 2018-03-21
+### Added
+- Some on-screen logging so user knows script has not stalled
+- Function to simplify logging
+- Check to prevent empty Order Number
+### Changed
+- Only inject sudo password if running as user probotix
+- When using router show the mist checkbox
+- Separated prompt for probes and swapping parallel ports so that it is possible to have both
+- Cleaned up more formatting in PROBOTIX.HAL
+### Removed
+- Disabled installing custom StepConf as it seems broken
 
 ## [2.2.1] - 2018-03-06
 ### Fixed

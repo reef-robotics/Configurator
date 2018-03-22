@@ -239,9 +239,8 @@ setp debounce.1.delay 10
 net spindle-cw => parport.0.pin-14-out
 net spindle-cw <= motion.spindle-forward
 
-# connect the shop vac to the flood coolant signal
-net flood => iocontrol.0.coolant-flood
-net flood => parport.0.pin-16-out
+# connect the shop vac to the mist coolant signal
+net mist iocontrol.0.coolant-mist => parport.0.pin-16-out
 
 
 # PWM
