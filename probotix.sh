@@ -1,18 +1,17 @@
 #!/bin/bash
 # 	PROBOTIX LinuxCNC Configurator
 #
-#
 # 	Copyright 2018 PROBOTIX
-# 	Originally written by Len Shelton
-# 	Modified by Kaden Lewis
+# 	Originally by Len Shelton
+# 	Updated by Kaden Lewis
 #
-_VERSION="2.2.2"
+_VERSION="2.4.0"
 
 ###################################################################################################
 # 	some variables
 #
 INSTALLDIR=$(pwd)
-DATETIME=$(date +'%Y-%m-%d %T')
+DATETIME=$(date +'%Y-%m-%d-%T')
 REBOOT=0
 CONFIG_FILE="/home/probotix/LINUXCNC_CONFIG"
 LOG_FILE="/home/probotix/LINUXCNC_LOG"
@@ -22,15 +21,15 @@ DUMP_DIR="../.CONFIGS"
 # 	some functions
 #
 f_prompt() {
-	# if second parameter not set then clear screen
-	if [ -z $2 ]
-	then
-		clear
-	fi
-
+	# usage: f_prompt question description
+	clear
 	printf '%s\n' "PROBOTIX LinuxCNC Configurator Version: $VERSION"
 	printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 	printf '%s\n' "$1"
+	if [ -n "$2" ]
+	then
+		printf "$2\n"
+	fi
 }
 
 f_log() {
@@ -52,18 +51,23 @@ f_log() {
 	esac
 }
 
+f_pause() {
+	echo
+	# pause for user
+	read -rsp $'Press any key to continue...\n' -n 1 key
+}
+
 f_exit () {
 	f_prompt "Configuration Complete"
-	if [ $REBOOT == 1 ]
+	if [ $REBOOT -eq 1 ]
 	then
-		echo "Please reboot the PC to apply changes."
+		echo "System will next reboot to apply changes."
+		f_pause
+		sudo shutdown -r now
 	else
 		echo "No need to reboot. Restart LinuxCNC to apply changes."
+		f_pause
 	fi
-	echo
-	echo "This window will close in 10 seconds"
-
-	sleep 10
 	exit
 }
 
@@ -78,13 +82,14 @@ gconftool-2 --set /apps/gnome-terminal/profiles/Default/background_color --type 
 ###################################################################################################
 # 	check for some errors
 #
-if [ "$(whoami)" == "probotix" ]
+if [ "$(whoami)" = "probotix" ]
 then
 	# push password into sudo so that it doesnt prompt for it later
 	sudo -S <<< "probotix" clear
 else
 	echo "Not running as user probotix! Call PROBOTIX 844.472.9262"
-	sleep 10
+	echo "This configurator is only intended for Probotix systems."
+	f_pause
 	exit
 fi
 
@@ -93,15 +98,31 @@ then
 	clear
 else
 	echo "Probotix directory not found! Call PROBOTIX 844.472.9262"
-	sleep 10
+	echo "This configurator is only intended for Probotix systems."
+	f_pause
 	exit
 fi
 
 if [ -d "/home/probotix/emc2" ]
 then
-	echo "EMC2 directory found! Call PROBOTIX 844.472.9262"
-	sleep 10
-	exit
+	f_log "EMC2 directory found!" "show"
+	f_prompt "Do you wish to contine?" "* This will delete your existing EMC2 folder."
+	select x in "Yes" "No";
+	do
+		case $x in
+			"Yes" )
+				tar -P -czf /home/probotix/.backup.emc2.tar.gz /home/probotix/emc2/
+				f_log "EMC2 Backup Created!"
+				rm -Rf /home/probotix/emc2
+				break;;
+			"No" )
+				echo "Call PROBOTIX 844.472.9262"
+				echo "You appear to be running an old version of LinuxCNC."
+				f_pause
+				exit
+				break;;
+		esac
+	done
 fi
 
 # if log exists
@@ -144,19 +165,18 @@ f_log "this config run version $VERSION at $DATETIME"
 # 	Step 0: installation type (new or upgrade)
 #
 f_log "prompt for install type"
-f_prompt "New install or upgrade existing?:"
-select x in "New Install" "Upgrade Existing";
+f_prompt "Configure machine or update software?:"
+select x in "Configure Machine" "Update Software";
 do
 	case $x in
-		"New Install" )
+		"Configure Machine" )
 			INSTALL_TYPE="NEW"
 			break;;
-		"Upgrade Existing" )
-			INSTALL_TYPE="UPGRADE"
+		"Update Software" )
+			INSTALL_TYPE="SOFTWARE"
 			break;;
 	esac
 done
-
 f_log "$x"
 
 ###################################################################################################
@@ -193,7 +213,7 @@ fi
 
 ###################################################################################################
 # 	install samba
-#		sudo apt-get install samba
+#	sudo apt-get install samba
 #
 if [ -e "/etc/samba/smb.conf" ]
 then
@@ -207,7 +227,7 @@ fi
 
 ###################################################################################################
 # 	if a bin folder is found in the $HOME folder, then it is added to the $PATH
-# 		this is where we will want to put any php scripts that we access from the GUI
+# 	this is where we will want to put any php scripts that we access from the GUI
 #
 if [ -d "/home/probotix/bin" ]
 then
@@ -227,7 +247,7 @@ sudo cp -f .freedesktop.org.xml /usr/share/mime/packages/freedesktop.org.xml
 sudo update-mime-database /usr/share/mime
 f_log "set default editor for .ngc files" "show"
 
-if [ $INSTALL_TYPE == "NEW" ]
+if [ "$INSTALL_TYPE" = "NEW" ]
 then
 	# remove the desktop icons
 	rm -Rf /home/probotix/Desktop/*.desktop
@@ -241,7 +261,7 @@ then
 	f_log "remove and recreate LinuxCNC dir" "show"
 fi
 cp -R .nc_files/* /home/probotix/linuxcnc/nc_files
-sudo cp -f .probotix_splash.gif /usr/share/linuxcnc/probotix_splash.gif
+cp -f .probotix_splash.gif /home/probotix/linuxcnc/configs/PROBOTIX/probotix_splash.gif
 f_log "copy nc_files and splash" "show"
 
 # copy custom stepconf
@@ -268,7 +288,8 @@ f_log "copy customized files" "show"
 
 # set desktop background
 SCREEN_WIDTH=$(xrandr --current | grep '*' | uniq | awk '{print $1}' | cut -d 'x' -f1)
-cp -f .$SCREEN_WIDTH*probotix_background.png /home/probotix/Pictures/.background.png
+#cp -f .$SCREEN_WIDTH*probotix_background.png /home/probotix/Pictures/.background.png
+cp -f .desktop_background.png /home/probotix/Pictures/.background.png
 gconftool-2 -t string -s /desktop/gnome/background/picture_filename /home/probotix/Pictures/.background.png
 f_log "set desktop background" "show"
 
@@ -279,16 +300,17 @@ f_log "disable screen-saver/idle login" "show"
 
 # turn on line numbers in gedit
 gconftool-2 --type bool --set /apps/gedit-2/preferences/editor/line_numbers/display_line_numbers true
-f_log "gedit line numbers" "show"
+gconftool-2 --type bool --set /apps/gedit-2/preferences/editor/auto_indent/auto_indent 1
+f_log "gedit line numbers and auto-indent" "show"
 
 # remove the update manager so that folks can't break linuxcnc with a software update
 sudo apt-get -qq -y remove update-manager
 f_log "remove update-manager" "show"
 
-if [ $INSTALL_TYPE == "UPGRADE" ]
+if [ "$INSTALL_TYPE" = "SOFTWARE" ]
 then
 	# no need to create temp files or prompt for other info, simply close
-	f_log "Upgrade of Installation Complete" "show"
+	f_log "Installation of Software Complete" "show"
 	f_exit
 fi
 
@@ -320,8 +342,8 @@ then
 fi
 
 # capture output of lscpi and copy it to file on the thumb drive so customer can email it if necessary
-rm -rf ./LSPCI.txt
-lspci -v > ./LSPCI.txt
+rm -rf ./../LSPCI.txt
+lspci -v > ./../LSPCI.txt
 
 # get substring
 SUB=${LSPCI:0:7}
@@ -346,7 +368,7 @@ f_log "indentified $IDENTB"
 # 		we can also encode a license mechanism here
 #
 f_log "prompt for order number"
-while [ -z $ORDER_NO ]
+until [[ $ORDER_NO =~ ^[0-9]+$ ]]
 do
 	f_prompt "Enter Order Number:"
 	read ORDER_NO
@@ -354,12 +376,11 @@ done
 
 case $ORDER_NO in
 	666 )
-		clear
 		f_log "FACTORY INSTALL" "show"
 		sleep 1
 		;;
 	* )
-		echo "CUSTOMER INSTALL"
+		f_log "CUSTOMER INSTALL" "show"
 		;;
 esac
 
@@ -377,6 +398,8 @@ do
 			MACHINE="V90MK2"
 			X_MAX_LIMIT=20.25
 			Y_MAX_LIMIT=12.4
+			UPRIGHT="SHORT"
+			ZBEARINGS="2"
 			break;;
 		"Comet" )
 			MACHINE="COMET"
@@ -421,46 +444,58 @@ f_log "MACHINE=$MACHINE" "both"
 ###################################################################################################
 # 	Step 3a: up-rights (short or tall)
 #
-f_log "prompt for up-right"
-f_prompt "Choose your up-right:"
-select x in "Tall" "Short";
-do
-	case $x in
-		"Short" )
-			UPRIGHT="SHORT"
-			break;;
-		"Tall" )
-			UPRIGHT="TALL"
-			Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
-			# need Y offset for ATLaS if using TALL uprights
-			#$Y_OFFSET=
-			break;;
-	esac
-done
+if [ -z $UPRIGHT ]
+then
+	f_log "prompt for up-right"
+	f_prompt "Choose your up-right:" "* Tall up-rights have a triangle cut out, the older Short ones do not.\n* All 2018+ machines have Tall up-rights."
+	select x in "Tall" "Short";
+	do
+		case $x in
+			"Short" )
+				UPRIGHT="SHORT"
+				break;;
+			"Tall" )
+				UPRIGHT="TALL"
+				Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
+				# need new Y for ATLaS if using TALL uprights
+				break;;
+		esac
+	done
+fi
 
 f_log "UPRIGHT=$UPRIGHT" "both"
 f_log "Y_MAX_LIMIT=$Y_MAX_LIMIT"
 
 ###################################################################################################
 # 	Step 3b: z bearings (2 or 4)
-#			number of bearings and their placement determins Z-axis travel
+#		number of bearings and their placement determins Z-axis travel
 #
-f_log "prompt for z bearings"
-f_prompt "Number of Z bearings:"
-select x in "Four" "Two";
-do
-	case $x in
-		"Two" )
-			ZBEARINGS="2"
-			# needs to be at least 5.7 to avoid crimping cable
-			ZMINLIM=5.7
-			break;;
-		"Four" )
-			ZBEARINGS="4"
-			ZMINLIM=4.7
-			break;;
-	esac
-done
+if [ -z $ZBEARINGS ]
+then
+	f_log "prompt for z bearings"
+	f_prompt "Number of Z bearings:" "* 2018+ machines have four Z bearings, older have two Z bearings."
+	select x in "Four" "Two";
+	do
+		case $x in
+			"Two" )
+				ZBEARINGS=2
+				break;;
+			"Four" )
+				ZBEARINGS=4
+				break;;
+		esac
+	done
+fi
+
+case $ZBEARINGS in
+	2 )
+		# needs to be at least 5.7 to avoid crimping cable
+		ZMINLIM=5.7
+		;;
+	4 )
+		ZMINLIM=4.7
+		;;
+esac
 
 f_log "ZBEARINGS=$ZBEARINGS" "both"
 
@@ -478,7 +513,7 @@ do
 			UNIT_DESC="(X.XXX in inches)"
 			UNIT_DESC_BIG="(XX.XXX in inches)"
 			REPLACE_RSC="G17 G20 G40 G49 G54 G90 G64 P0.001 T0"
-			REPLACE_INC=".1in .05in .01in .005in .001in"
+			REPLACE_INC="0.1in 0.05in 0.01in 0.005in 0.001in"
 			GUNITS="G20"
 			break;;
 		"Metric" )
@@ -502,8 +537,8 @@ then
 	Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT*$I" | bc -l)
 fi
 
-f_log "set X_MAX_LIMIT=$X_MAX_LIMIT" "both"
-f_log "set Y_MAX_LIMIT=$Y_MAX_LIMIT" "both"
+f_log "X_MAX_LIMIT=$X_MAX_LIMIT" "both"
+f_log "Y_MAX_LIMIT=$Y_MAX_LIMIT" "both"
 
 # X_PARK is center of X travel
 X_PARK=$(expr "scale=2; $X_MAX_LIMIT/2" | bc -l)
@@ -525,8 +560,6 @@ sed -i -e 's/REPLACE_Y_PARK/'"$Y_PARK"'/' .TEMPemc.var
 ###################################################################################################
 # 	Step 5a: spindle (router or vfd)
 #
-SPID="FALSE"
-
 f_log "prompt for spindle"
 f_prompt "Choose your spindle:"
 select x in "Router" "VFD Spindle";
@@ -534,17 +567,18 @@ do
 	case $x in
 		"Router" )
 			f_log "prompt for superpid"
-			f_prompt "Do you have a SuperPID?:"
+			f_prompt "Do you have a SuperPID?:" "* Label can be found on Unity backpanel.\n* If you are unsure, say NO"
 			select y in "No" "Yes";
 			do
 				case $y in
 					"Yes" )
-						SPID="TRUE"
+						SPID="YES"
 						# remove router code
 						f_log "removing router controls from hal file"
 						sed -i '/ROUTER/,+6d' .TEMP.hal
 						break;;
 					"No" )
+						SPID="NO"
 						sed -i '/PWM/,+5d' .TEMP.hal
 						break;;
 				esac
@@ -558,7 +592,7 @@ do
 			break;;
 		"VFD Spindle" )
 			SPINDLE="VFD"
-			ROUTER_MOUNT="LONG"
+			MOUNT="LONG"
 			# remove router code
 			f_log "removing router controls from hal file"
 			sed -i '/ROUTER/,+6d' .TEMP.hal
@@ -566,74 +600,23 @@ do
 	esac
 done
 
-if [ $SPID == "FALSE" ]
+if [ $SPID != "YES" ]
 then
+	SPID="NO"
 	# remove superpid code
 	f_log "removing superpid from hal files"
 	sed -i '/SUPERPID/,+10d' .TEMP.hal
+	sed -i '/ROUTER_SPEED/,+13d' .TEMP.xml
 fi
 
 f_log "SPINDLE=$SPINDLE" "both"
 f_log "SPID=$SPID" "both"
 
 ###################################################################################################
-# 	Step 5b: router mount (long or short)
-#			need to ask this to determine ATLaS Y position
-#			short mounts are -0.165 shorter from Y center
-#
-ATLAS_X=-0.075
-#ATLAS_Y=3.5533
-
-if [ $SPINDLE == "ROUTER" ]
-then
-	f_log "prompt for router mount"
-	f_prompt "Choose Your Router Mount:"
-	select x in "One-Piece Long Center" "Two-Piece Short Center" "Two-Piece Long Center";
-	do
-		case $x in
-			"One-Piece Long Center" )
-				ROUTER_MOUNT="LONG"
-				ATLAS_Y=3.5533
-				break;;
-			"Two-Piece Short Center" )
-				ROUTER_MOUNT="SHORT"
-				ATLAS_Y=3.3883
-				break;;
-			"Two-Piece Long Center" )
-				ROUTER_MOUNT="LONG"
-				ATLAS_Y=3.5533
-				break;;
-		esac
-	done
-	f_log "$x"
-fi
-
-f_log "ROUTER_MOUNT=$ROUTER_MOUNT" "both"
-
-###################################################################################################
-# 	ATLaS settings
-#
-ATLAS_X=$(expr "scale=4; $ATLAS_X*$I" | bc -l)
-#ATLAS_Y=$(expr "scale=4; $ATLAS_Y+$Y_OFFSET" | bc -l)
-ATLAS_Y=$(expr "scale=4; $ATLAS_Y*$I" | bc -l)
-f_log "ATLAS_X=$ATLAS_X"
-f_log "ATLAS_Y=$ATLAS_Y"
-
-# hardcode ATLaS offset in 100.ngc
-f_log "hard code ATLaS offset in 100.ngc"
-sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMP100.ngc
-sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMP100.ngc
-
-# set G59.3 offset to center of ATLaS
-f_log "set G59.3 offset to center of ATLaS"
-sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMPemc.var
-sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMPemc.var
-
-###################################################################################################
 # 	Step 6: ACME screw (roton or helix)
 #
 f_log "prompt for acme"
-f_prompt "Choose your ACME screw:"
+f_prompt "Choose your ACME screw:" "* Helix: blue drive nuts, Roton: black drive nuts\n* All 2016+ machines have Helix."
 select x in "Helix" "Roton";
 do
 	case $x in
@@ -660,7 +643,7 @@ sed -i -e 's/REPLACE_ZVELOCITY/'"Z_MAXVEL"'/' .TEMP.ini
 # 	Step 7: drivers (unipolar or bipolar)
 #
 f_log "prompt for drivers"
-f_prompt "Choose your drivers:"
+f_prompt "Choose your drivers:" "* MondoStep (newer, bi-polar, black cabinet or Unity controller).\n* Probostep (older, uni-polar, beige control cabinet)."
 select x in "MondoStep" "ProboStep";
 do
 	case $x in
@@ -744,7 +727,7 @@ do
 			break;;
 		"Z-Puck only" )
 			SENSOR="Z-Puck"
-			ZPUCK_DIST=$(expr "scale=2; 5*$I" | bc -l)
+			ZPUCK_DIST=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
 			ZPUCK_FEED=$(expr "scale=2; 10*$I" | bc -l)
 			f_prompt "Enter Height of Z-Puck $UNIT_DESC"
 			read ZPUCK
@@ -756,10 +739,11 @@ do
 			# remove atlas
 			sed -i '/ATLAS/,+5d' .TEMP.xml
 			sed -i '/HALUI_FIRST_TOOL/,+1d' .TEMPpostgui.hal
+			sed -i '/tool_length_in/d' .TEMP.hal
 			break;;
 		"Both" )
 			SENSOR="BOTH"
-			ZPUCK_DIST=$(expr "scale=2; 5*$I" | bc -l)
+			ZPUCK_DIST=$(expr "scale=2; $ZMINLIM*$I" | bc -l)
 			ZPUCK_FEED=$(expr "scale=2; 10*$I" | bc -l)
 			f_prompt "Enter Height of Z-Puck $UNIT_DESC"
 			read ZPUCK
@@ -778,6 +762,7 @@ do
 			# remove probe indicator
 			sed -i '/PROBE/,+15d' .TEMP.xml
 			sed -i '/PROBE_LED/,+1d' .TEMPpostgui.hal
+			sed -i '/PROBE/,+9d' .TEMP.hal
 			# remove zpuck control
 			sed -i '/ZPUCK/,+5d' .TEMP.xml
 			sed -i '/HALUI_ZPUCK/,+1d' .TEMPpostgui.hal
@@ -790,68 +775,75 @@ done
 f_log "SENSOR=$SENSOR" "both"
 
 ###################################################################################################
-# 	Step 10a: confirm parallel port addresses, or enter custom
+# 	Step 5b: router mount (long or short)
+#		need to ask this to determine ATLaS Y position
+#		short mounts are -0.165 shorter from Y center
 #
-PARPORT0="0x378"
-PARPORT1=$IDENTB
-f_log "prompt confirm parport addr"
-f_prompt "PARPORT.0 $PARPORT0, PARPORT.1 $PARPORT1 Okay?"
-select x in "Yes" "No";
-do
-	case $x in
-		"Yes" )
-			break;;
-		"No" )
-			echo
-			echo "Enter PARPORT0:"
-			read PARPORT0
-			echo "Enter PARPORT1:"
-			read PARPORT1
-			break;;
-	esac
-done
-f_log "$x"
+if [ -z $MOUNT ]
+then
+	f_log "prompt for router mount"
+	f_prompt "Choose Your Router Mount:" "* This only matters if you use the ATLaS."
+	select x in "One-Piece Mount" "Two-Piece with 3/4in Back Plate" "Two-Piece with 1/2in Back Plate";
+	do
+		case $x in
+			"One-Piece Mount" | "Two-Piece with 3/4in Back Plate" )
+				MOUNT="LONG"
+				break;;
+			"Two-Piece with 1/2in Back Plate" )
+				MOUNT="SHORT"
+				break;;
+		esac
+	done
+	f_log "$x"
+fi
+
+ATLAS_X=-0.075
+
+case $MOUNT in
+	"LONG" )
+		ATLAS_Y=3.5533
+		;;
+	"SHORT" )
+		ATLAS_Y=3.3883
+		;;
+esac
+
+f_log "MOUNT=$MOUNT" "both"
 
 ###################################################################################################
-# 	Step 10b: swap parallel ports
+# 	ATLaS settings
 #
-f_log "prompt swap parallel ports"
-f_prompt "Do you want to swap the parallel ports?"
-select x in "No" "Yes";
-do
-	case $x in
-		"No" )
-			break;;
-		"Yes" )
-			PARPORT0=$IDENTB
-			PARPORT1="0x378"
-			break;;
-	esac
-done
-f_log "$x"
+ATLAS_X=$(expr "scale=4; $ATLAS_X*$I" | bc -l)
+ATLAS_Y=$(expr "scale=4; $ATLAS_Y*$I" | bc -l)
+f_log "ATLAS_X=$ATLAS_X"
+f_log "ATLAS_Y=$ATLAS_Y"
 
-# save parports to hal file
-f_log "set parport addr in hal file"
-sed -i -e 's/PARPORT0/'"$PARPORT0"'/' \
-	-e 's/PARPORT1/'"$PARPORT1 in"'/' .TEMP.hal
+# hardcode ATLaS offset in 100.ngc
+sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMP100.ngc
+sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMP100.ngc
+f_log "hard code ATLaS offset in 100.ngc"
 
-f_log "PARPORT0=$PARPORT0" "both"
-f_log "PARPORT1=$PARPORT1" "both"
+# set G59.3 offset to center of ATLaS
+sed -i -e 's/REPLACE_ATLAS_X/'"$ATLAS_X"'/' .TEMPemc.var
+sed -i -e 's/REPLACE_ATLAS_Y/'"$ATLAS_Y"'/' .TEMPemc.var
+f_log "set G59.3 offset to center of ATLaS"
 
 ###################################################################################################
 # 	Step 11: rotary?
 #
 f_log "prompt for rotary axis"
-f_prompt "Do you have the rotary axis?"
+f_prompt "Do you have the 4th/rotary/A-axis?" "* If unsure, say NO."
 select xa in "No" "Yes";
 do
 	case $xa in
 		"Yes" )
+			ROTARY="YES"
 			COORDINATES="X Y Z A"
 			COORDINATES_="X\ Y\ Z\ A"
 			AXES=4
 			break;;
 		"No" )
+			ROTARY="NO"
 			COORDINATES="X Y Z"
 			COORDINATES_="X\ Y\ Z"
 			AXES=3
@@ -865,6 +857,7 @@ do
 	esac
 done
 f_log "COORDINATES=$COORDINATES" "both"
+f_log "ROTARY=$ROTARY" "both"
 
 ###################################################################################################
 # 	Step 12: driver swap
@@ -881,7 +874,7 @@ ASTEP="17"
 ADIR="01"
 
 f_log "prompt for driver swap"
-f_prompt "Do you want to swap a motor to the A-axis output?"
+f_prompt "Do you want to swap a motor to the A-axis output?" "* For use as a temporary work-around for a failed driver.\n* You will lose use of the rotary when configured like this.\n* If unsure, say NO."
 select x in "No" "X" "Y1" "Y2" "Z";
 do
 	case $x in
@@ -943,7 +936,7 @@ f_log "set axis pins in hal file"
 # 	Step 13: soft limits only
 #
 f_log "prompt for soft limits"
-f_prompt "Do you want to use soft limits only?"
+f_prompt "Do you want to use soft limits only?" "* For use when having intermittent limit switch issues from faulty switches or electrical noise.\n* If unsure, say NO."
 select x in "No" "Yes";
 do
 	case $x in
@@ -956,7 +949,61 @@ do
 done
 f_log "SOFT_ONLY=$x" "both"
 
+###################################################################################################
+# 	Step 10a: confirm parallel port addresses, or enter custom
+#
+PARPORT0="0x378"
+PARPORT1=$IDENTB
+f_log "prompt confirm parport addr"
+f_prompt "Are the detected parallel port addresses correct?" "* PARPORT0 = $PARPORT0\n* PARPORT1 = $PARPORT1\n* If unsure, say YES."
+select x in "Yes" "No";
+do
+	case $x in
+		"Yes" )
+			break;;
+		"No" )
+			echo
+			echo "Please enter the correct parallel port addresses."
+			echo "PARPORT0:"
+			read PARPORT0
+			echo "PARPORT1:"
+			read PARPORT1
+			break;;
+	esac
+done
+f_log "correct parports=$x"
 
+###################################################################################################
+# 	Step 10b: swap parallel ports
+#
+f_log "prompt swap parallel ports"
+f_prompt "Do you want to swap the parallel ports?" "* Used to troubleshoot issues with machine control.\n* PARPORT0 = $PARPORT0\n* PARPORT1 = $PARPORT1\n* If unsure, say NO."
+select x in "No" "Yes";
+do
+	case $x in
+		"No" )
+			SWAP_PARPORTS="NO"
+			break;;
+		"Yes" )
+			SWAP_PARPORTS="YES"
+			PARPORT0=$IDENTB
+			PARPORT1="0x378"
+			break;;
+	esac
+done
+f_log "SWAP_PARPORTS=$SWAP_PARPORTS"
+
+# save parports to hal file
+f_log "set parport addr in hal file"
+sed -i -e 's/PARPORT0/'"$PARPORT0"'/' \
+	-e 's/PARPORT1/'"$PARPORT1"'/' .TEMP.hal
+
+f_log "PARPORT0=$PARPORT0" "both"
+f_log "PARPORT1=$PARPORT1" "both"
+
+###################################################################################################
+# 	Calculations
+#
 # metricify some additional axis vars
 # floating point math is hoaky in bash, must us bc (bash calculator)
 # a-axis is in degrees, so no metrification necessary
@@ -992,15 +1039,17 @@ then
 	echo "ACME        =" $ACME >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "DRIVERS     =" $DRIVERS >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "SPINDLE     =" $SPINDLE >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
+	echo "MOUNT       =" $MOUNT >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "SPID        =" $SPID >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "PENDANT     =" $PENDANT >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "SENSOR      =" $SENSOR >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
-	echo "AXES        =" $AXES >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
-	echo "COORDINATES =" $COORDINATES >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "ZPUCK       =" $ZPUCK >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
-	echo "ZTPI        =" $ZTPI >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
+	echo "ROTARY      =" $ROTARY >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "PARPORT0    =" $PARPORT0 >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "PARPORT1    =" $PARPORT1 >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
+	echo "AXES        =" $AXES >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
+	echo "COORDINATES =" $COORDINATES >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
+	echo "ZTPI        =" $ZTPI >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "XYSCALE     =" $XYSCALE >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "ZSCALE      =" $ZSCALE >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
 	echo "XY_MAXVEL   =" $XY_MAXVEL >> $DUMP_DIR/CONFIG_DUMP.$ORDER_NO
@@ -1065,7 +1114,7 @@ sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' \
 f_log "replace vars in ini file"
 
 ###################################################################################################
-#		Save the TEMP files
+#	Save the TEMP files
 #
 # create link to nc_files on desktop
 ln -sf /home/probotix/linuxcnc/nc_files/ /home/probotix/Desktop/nc_files
@@ -1081,7 +1130,7 @@ cp .TEMP.ini /home/probotix/linuxcnc/configs/PROBOTIX/probotix.ini
 cp .TEMP.hal /home/probotix/linuxcnc/configs/PROBOTIX/probotix.hal
 cp .TEMPpostgui.hal /home/probotix/linuxcnc/configs/PROBOTIX/postgui.hal
 cp .TEMP.xml /home/probotix/linuxcnc/configs/PROBOTIX/pyvcp.xml
-cp .tool.tbl /home/probotix/linuxcnc/configs/PROBOTIX/tool.tbl
+#cp .tool.tbl /home/probotix/linuxcnc/configs/PROBOTIX/tool.tbl
 cp .emc.nml  /home/probotix/linuxcnc/configs/PROBOTIX/emc.nml
 cp .TEMPemc.var  /home/probotix/linuxcnc/configs/PROBOTIX/emc.var
 cp .TEMP102.ngc /home/probotix/linuxcnc/nc_files/subs/102.ngc
@@ -1093,6 +1142,6 @@ rm -f .TEMP*
 f_log "remove temp files"
 
 ###################################################################################################
-#		End
+#	End
 #
 f_exit

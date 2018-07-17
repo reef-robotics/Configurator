@@ -1,5 +1,8 @@
 o100 SUB
 
+(G59.3 holds coordinates for ATLaS)
+(#<_ATLAS_X> = [#5381])
+(#<_ATLAS_Y> = [#5382])
 #<_ATLAS_X> = REPLACE_ATLAS_X
 #<_ATLAS_Y> = REPLACE_ATLAS_Y
 #<_MULTIPLIER> = REPLACE_MULTIPLIER

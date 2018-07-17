@@ -14,6 +14,20 @@
 		<!--<min_>7000</min_>-->
 	</bar>
 </vbox>
+<!-- ROUTER_SPEED -->
+<vbox>
+	<relief>RIDGE</relief>
+         <bd>4</bd>
+	<label>
+		<text>"Router Speed:"</text>
+		<font>("fixed",10)</font>
+	</label>
+	<bar>
+		<halpin>"spindle-speed"</halpin>
+		<max_>30000</max_>
+		<min_>5000</min_>
+	</bar>
+</vbox>
 
 <!-- PROBE -->
 <hbox>

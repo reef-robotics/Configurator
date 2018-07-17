@@ -1,4 +1,7 @@
 %
+(Circle-Square Test)
+(G55 touch-off all axes)
+
 G55 G90
 M3 S1
 G0 z0.25

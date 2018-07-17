@@ -15,734 +15,25 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#
-#   Modified by PROBOTIX
-#
-#
-#
-
 
 lappend auto_path $::linuxcnc::TCL_LIB_DIR
 
-. configure \
-	-menu .menu
 
-menu .menu \
-	-cursor {}
 
-menu .menu.file \
-	-tearoff 0
-menu .menu.file.recent \
-	-tearoff 0
-menu .menu.machine \
-	-tearoff 0
-menu .menu.machine.home \
-	-tearoff 0
-menu .menu.machine.unhome \
-	-tearoff 0
-menu .menu.view \
-	-tearoff 0
-menu .menu.help \
-	-tearoff 0
-menu .menu.machine.touchoff \
-    -tearoff 0
-menu .menu.machine.clearoffset \
-    -tearoff 0
+source /home/probotix/linuxcnc/configs/PROBOTIX/axis/tcl/menu.tcl
 
-.menu.file add command \
-	-accelerator O \
-	-command open_file
-setup_menu_accel .menu.file end [_ "_Open..."]
+source /home/probotix/linuxcnc/configs/PROBOTIX/axis/tcl/toolbar.tcl
 
-.menu.file add cascade \
-        -menu .menu.file.recent
-setup_menu_accel .menu.file end [_ "Recent _Files"]
 
-.menu.file add command \
-    -command edit_program
-setup_menu_accel .menu.file end [_ "_Edit..."]
 
-.menu.file add command \
-	-accelerator [_ "Ctrl-R"] \
-	-command reload_file
-setup_menu_accel .menu.file end [_ "_Reload"]
 
-.menu.file add command \
-        -accelerator [_ "Ctrl-S"] \
-        -command save_gcode
-setup_menu_accel .menu.file end [_ "_Save gcode as..."]
-
-.menu.file add command \
-        -command gcode_properties
-setup_menu_accel .menu.file end [_ "_Properties..."]
-
-.menu.file add separator
-
-.menu.file add command \
-    -command edit_tooltable
-setup_menu_accel .menu.file end [_ "Edit _tool table..."]
-
-.menu.file add command \
-	-command reload_tool_table
-setup_menu_accel .menu.file end [_ "Reload tool ta_ble"]
-
-.menu.file add separator
-
-.menu.file add command \
-        -command {exec classicladder &}
-setup_menu_accel .menu.file end [_ "_Ladder Editor..."]
-
-.menu.file add separator
-
-.menu.file add command \
-	-command {destroy .}
-setup_menu_accel .menu.file end [_ "_Quit"]
-
-# ----------------------------------------------------------------------
-.menu.machine add command \
-	-accelerator F1 \
-	-command estop_clicked
-setup_menu_accel .menu.machine end [_ "Toggle _Emergency Stop"]
-
-.menu.machine add command \
-	-accelerator F2 \
-	-command onoff_clicked
-setup_menu_accel .menu.machine end [_ "Toggle _Machine Power"]
-
-.menu.machine add separator
-
-.menu.machine add command \
-	-accelerator R \
-	-command task_run
-setup_menu_accel .menu.machine end [_ "_Run program"]
-
-.menu.machine add command \
-	-command task_run_line
-setup_menu_accel .menu.machine end [_ "Ru_n from selected line"]
-
-.menu.machine add command \
-	-accelerator T \
-	-command task_step
-setup_menu_accel .menu.machine end [_ "S_tep"]
-
-.menu.machine add command \
-	-accelerator P \
-	-command task_pause
-setup_menu_accel .menu.machine end [_ "_Pause"]
-
-.menu.machine add command \
-	-accelerator S \
-	-command task_resume
-setup_menu_accel .menu.machine end [_ "Re_sume"]
-
-.menu.machine add command \
-	-accelerator ESC \
-	-command task_stop
-setup_menu_accel .menu.machine end [_ "Stop"]
-
-.menu.machine add checkbutton \
-        -command toggle_optional_stop \
-        -variable optional_stop
-setup_menu_accel .menu.machine end [_ "Stop at M_1"]
-
-.menu.machine add checkbutton \
-        -command toggle_block_delete \
-        -variable block_delete
-setup_menu_accel .menu.machine end [_ "Skip lines with '_/'"]
-
-.menu.machine add separator
-
-.menu.machine add command \
-	-accelerator [_ "Ctrl-M"] \
-	-command clear_mdi_history
-setup_menu_accel .menu.machine end [_ "Clear MDI h_istory"]
-.menu.machine add command \
-	-accelerator [_ "Ctrl-H"] \
-	-command mdi_history_hist2clip
-setup_menu_accel .menu.machine end [_ "Copy from MDI hist_ory"]
-.menu.machine add command \
-	-accelerator [_ "Ctrl-Shift-H"] \
-	-command mdi_history_clip2hist
-setup_menu_accel .menu.machine end [_ "Paste to MDI histor_y"]
-
-.menu.machine add separator
-
-.menu.machine add command \
-        -command {exec $env(LINUXCNC_TCL_DIR)/bin/emccalib.tcl -- -ini $emcini &}
-setup_menu_accel .menu.machine end [_ "_Calibration"]
-
-.menu.machine add command \
-        -command {exec $env(LINUXCNC_TCL_DIR)/bin/halshow.tcl -- -ini $emcini &}
-setup_menu_accel .menu.machine end [_ "Show _Hal Configuration"]
-
-.menu.machine add command \
-        -command {exec halmeter &}
-setup_menu_accel .menu.machine end [_ "H_al Meter"]
-
-.menu.machine add command \
-        -command {exec halscope -- -ini $emcini &}
-setup_menu_accel .menu.machine end [_ "Ha_l Scope"]
-
-.menu.machine add command \
-	-command {exec linuxcnctop -ini $emcini &}
-setup_menu_accel .menu.machine end [_ "Sho_w LinuxCNC Status"]
-
-.menu.machine add command \
-	-command {exec debuglevel -ini $emcini &}
-setup_menu_accel .menu.machine end [_ "Set _Debug Level"]
-
-.menu.machine add separator
-
-.menu.machine add cascade \
-        -menu .menu.machine.home
-setup_menu_accel .menu.machine end [_ "Homin_g"]
-
-.menu.machine add cascade \
-        -menu .menu.machine.unhome
-setup_menu_accel .menu.machine end [_ "_Unhoming"]
-
-.menu.machine add cascade \
-    -menu .menu.machine.clearoffset
-setup_menu_accel .menu.machine end [_ "_Zero coordinate system"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 1]
-setup_menu_accel .menu.machine.clearoffset end [_ "P1  G5_4"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 2]
-setup_menu_accel .menu.machine.clearoffset end [_ "P2  G5_5"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 3]
-setup_menu_accel .menu.machine.clearoffset end [_ "P3  G5_6"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 4]
-setup_menu_accel .menu.machine.clearoffset end [_ "P4  G5_7"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 5]
-setup_menu_accel .menu.machine.clearoffset end [_ "P5  G5_8"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 6]
-setup_menu_accel .menu.machine.clearoffset end [_ "P6  G5_9"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 7]
-setup_menu_accel .menu.machine.clearoffset end [_ "P7  G59._1"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 8]
-setup_menu_accel .menu.machine.clearoffset end [_ "P8  G59._2"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset 9]
-setup_menu_accel .menu.machine.clearoffset end [_ "P9  G59._3"]
-
-.menu.machine.clearoffset add command \
-    -command [list clear_offset G92]
-setup_menu_accel .menu.machine.clearoffset end [_ "_G92"]
-
-.menu.machine add separator
-
-.menu.machine add radiobutton \
-	-variable tto_g11 \
-        -value 0 \
-        -command toggle_tto_g11
-setup_menu_accel .menu.machine end [_ "Tool touch off to wor_kpiece"]
-
-.menu.machine add radiobutton \
-	-variable tto_g11 \
-        -value 1 \
-        -command toggle_tto_g11
-setup_menu_accel .menu.machine end [_ "Tool touch off to _fixture"]
-
-# ----------------------------------------------------------------------
-.menu.view add radiobutton \
-	-command set_view_z \
-        -variable view_type \
-        -value 1 \
-	-accelerator V
-setup_menu_accel .menu.view end [_ "_Top view"]
-
-.menu.view add radiobutton \
-	-command set_view_z2 \
-        -variable view_type \
-        -value 2 \
-	-accelerator V
-setup_menu_accel .menu.view end [_ "_Rotated Top view"]
-
-.menu.view add radiobutton \
-	-command set_view_x \
-        -variable view_type \
-        -value 3 \
-	-accelerator V
-setup_menu_accel .menu.view end [_ "_Side view"]
-
-.menu.view add radiobutton \
-	-command set_view_y \
-        -variable view_type \
-        -value 4 \
-	-accelerator V
-setup_menu_accel .menu.view end [_ "_Front view"]
-
-.menu.view add radiobutton \
-	-command set_view_p \
-        -variable view_type \
-        -value 5 \
-	-accelerator V
-setup_menu_accel .menu.view end [_ "_Perspective view"]
-
-.menu.view add separator
-
-.menu.view add radiobutton \
-	-value 0 \
-	-variable metric \
-	-command redraw \
-        -accelerator !
-setup_menu_accel .menu.view end [_ "Display _Inches"]
-
-.menu.view add radiobutton \
-	-value 1 \
-	-variable metric \
-	-command redraw \
-        -accelerator !
-setup_menu_accel .menu.view end [_ "Display _MM"]
-
-.menu.view add separator
-
-.menu.view add checkbutton \
-	-variable show_program \
-	-command toggle_show_program
-setup_menu_accel .menu.view end [_ "S_how program"]
-
-.menu.view add checkbutton \
-	-variable show_rapids \
-	-command toggle_show_rapids
-setup_menu_accel .menu.view end [_ "Show program r_apids"]
-
-.menu.view add checkbutton \
-	-variable program_alpha \
-	-command toggle_program_alpha
-setup_menu_accel .menu.view end [_ "Alpha-_blend program"]
-
-.menu.view add checkbutton \
-	-variable show_live_plot \
-	-command toggle_show_live_plot
-setup_menu_accel .menu.view end [_ "Sho_w live plot"]
-
-.menu.view add checkbutton \
-	-variable show_tool \
-	-command toggle_show_tool
-setup_menu_accel .menu.view end [_ "Show too_l"]
-
-.menu.view add checkbutton \
-	-variable show_extents \
-	-command toggle_show_extents
-setup_menu_accel .menu.view end [_ "Show e_xtents"]
-
-.menu.view add checkbutton \
-	-variable show_offsets \
-	-command toggle_show_offsets
-setup_menu_accel .menu.view end [_ "Show o_ffsets"]
-
-.menu.view add checkbutton \
-	-variable show_machine_limits \
-	-command toggle_show_machine_limits
-setup_menu_accel .menu.view end [_ "Sh_ow machine limits"]
-
-.menu.view add checkbutton \
-	-variable show_machine_speed \
-	-command toggle_show_machine_speed
-setup_menu_accel .menu.view end [_ "Show v_elocity"]
-
-.menu.view add checkbutton \
-	-variable show_distance_to_go \
-	-command toggle_show_distance_to_go
-setup_menu_accel .menu.view end [_ "Show _distance to go"]
-
-.menu.view add checkbutton \
-	-variable dro_large_font \
-	-command toggle_dro_large_font
-setup_menu_accel .menu.view end [_ "Large coordinate fo_nt"]
-
-.menu.view add command \
-	-accelerator [_ "Ctrl-K"] \
-	-command clear_live_plot
-setup_menu_accel .menu.view end [_ "_Clear live plot"]
-
-.menu.view add separator
-
-.menu.view add radiobutton \
-	-value 1 \
-	-variable display_type \
-	-accelerator @ \
-	-command redraw
-setup_menu_accel .menu.view end [_ "Show commanded position"]
-
-.menu.view add radiobutton \
-	-value 0 \
-	-variable display_type \
-	-accelerator @ \
-	-command redraw
-setup_menu_accel .menu.view end [_ "Show actual position"]
-
-.menu.view add separator
-
-.menu.view add radiobutton \
-	-value 0 \
-	-variable coord_type \
-	-accelerator # \
-	-command redraw
-setup_menu_accel .menu.view end [_ "Show machine position"]
-
-.menu.view add radiobutton \
-	-value 1 \
-	-variable coord_type \
-	-accelerator # \
-	-command redraw
-setup_menu_accel .menu.view end [_ "Show relative position"]
-
-.menu.view add separator
-
-.menu.view add radiobutton \
-        -value 0 \
-        -variable joint_mode \
-        -accelerator $ \
-        -command set_joint_mode
-setup_menu_accel .menu.view end [_ "Joint mode"]
-
-.menu.view add radiobutton \
-        -value 1 \
-        -variable joint_mode \
-        -accelerator $ \
-        -command set_joint_mode
-setup_menu_accel .menu.view end [_ "World mode"]
-# ----------------------------------------------------------------------
-.menu.help add command \
-	-command {
-            wm transient .about .;
-            wm deiconify .about;
-            show_all .about.message;
-            focus .about.ok
-        }
-setup_menu_accel .menu.help end [_ "_About AXIS"]
-
-.menu.help add command \
-	-command {wm transient .keys .;wm deiconify .keys; focus .keys.ok}
-setup_menu_accel .menu.help end [_ "Quick _Reference"]
-
-
-# ----------------------------------------------------------------------
-.menu add cascade \
-	-menu .menu.file
-setup_menu_accel .menu end [_ _File]
-
-.menu add cascade \
-	-menu .menu.machine
-setup_menu_accel .menu end [_ _Machine]
-
-.menu add cascade \
-	-menu .menu.view
-setup_menu_accel .menu end [_ _View]
-
-.menu add cascade \
-	-menu .menu.help
-setup_menu_accel .menu end [_ _Help]
-
-frame .toolbar \
-	-borderwidth 1 \
-	-relief raised
-
-vrule .toolbar.rule16
-
-Button .toolbar.machine_estop \
-	-helptext [_ "Toggle Emergency Stop \[F1\]"] \
-	-image [load_image tool_estop] \
-	-relief sunken \
-	-takefocus 0
-bind .toolbar.machine_estop <Button-1> { estop_clicked }
-setup_widget_accel .toolbar.machine_estop {}
-
-Button .toolbar.machine_power \
-	-command onoff_clicked \
-	-helptext [_ "Toggle Machine power \[F2\]"] \
-	-image [load_image tool_power] \
-	-relief link \
-	-state disabled \
-	-takefocus 0
-setup_widget_accel .toolbar.machine_power {}
-
-vrule .toolbar.rule0
-
-Button .toolbar.file_open \
-	-command { open_file } \
-	-helptext [_ "Open G-Code file \[O\]"] \
-	-image [load_image tool_open] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.file_open {}
-
-Button .toolbar.reload \
-	-command { reload_file } \
-	-helptext [_ "Reopen current file \[Control-R\]"] \
-	-image [load_image tool_reload] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.reload {}
-
-vrule .toolbar.rule4
-
-Button .toolbar.program_run \
-	-command task_run \
-	-helptext [_ "Begin executing current file \[R\]"] \
-	-image [load_image tool_run] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.program_run {}
-
-Button .toolbar.program_step \
-	-command task_step \
-	-helptext [_ "Execute next line \[T\]"] \
-	-image [load_image tool_step] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.program_step {}
-
-Button .toolbar.program_pause \
-	-command task_pauseresume \
-	-helptext [_ "Pause \[P\] / resume \[S\] execution"] \
-	-image [load_image tool_pause] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.program_pause {}
-       
-Button .toolbar.program_stop \
-	-command task_stop \
-	-helptext [_ "Stop program execution \[ESC\]"] \
-	-image [load_image tool_stop] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.program_stop {}
-
-vrule .toolbar.rule8
-
-Button .toolbar.program_blockdelete \
-        -command { set block_delete [expr {!$block_delete}]; toggle_block_delete } \
-        -helptext [_ "Toggle skip lines with '/' \[Alt-M /\]"] \
-	-image [load_image tool_blockdelete] \
-        -relief link \
-        -takefocus 0
-
-Button .toolbar.program_optpause \
-        -command { set optional_stop [expr {!$optional_stop}]; toggle_optional_stop } \
-        -helptext [_ "Toggle optional pause \[Alt-M 1\]"] \
-	-image [load_image tool_optpause] \
-        -relief link \
-        -takefocus 0
-
-vrule .toolbar.rule9
- 
-Button .toolbar.view_zoomin \
-	-command zoomin \
-	-helptext [_ "Zoom in"] \
-	-image [load_image tool_zoomin] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.view_zoomin {}
-
-Button .toolbar.view_zoomout \
-	-command zoomout \
-	-helptext [_ "Zoom out"] \
-	-image [load_image tool_zoomout] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.view_zoomout {}
-
-Button .toolbar.view_z \
-	-command set_view_z \
-	-helptext [_ "Top view"] \
-	-image [load_image tool_axis_z] \
-	-relief sunken \
-	-takefocus 0
-setup_widget_accel .toolbar.view_z {}
-
-Button .toolbar.view_z2 \
-	-command set_view_z2 \
-	-helptext [_ "Rotated top view"] \
-	-image [load_image tool_axis_z2] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.view_z2 {}
-
-Button .toolbar.view_x \
-	-command set_view_x \
-	-helptext [_ "Side view"] \
-	-image [load_image tool_axis_x] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.view_x {}
-
-Button .toolbar.view_y \
-	-command set_view_y \
-	-helptext [_ "Front view"] \
-	-image [load_image tool_axis_y] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.view_y {}
-
-Button .toolbar.view_p \
-	-command set_view_p \
-	-helptext [_ "Perspective view"] \
-	-image [load_image tool_axis_p] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.view_p {}
-
-Button .toolbar.rotate \
-        -image [load_image tool_rotate] \
-	-helptext [_ "Toggle between Drag and Rotate Mode \[D\]"] \
-        -relief link \
-        -command {
-            set rotate_mode [expr {!$rotate_mode}]
-            if {$rotate_mode} {
-                .toolbar.rotate configure -relief sunken
-            } else {
-                .toolbar.rotate configure -relief link
-            }
-        }
-
-vrule .toolbar.rule12
-
-Button .toolbar.clear_plot \
-	-command clear_live_plot \
-	-helptext [_ "Clear live plot \[Ctrl-K\]"] \
-	-image [load_image tool_clear] \
-	-relief link \
-	-takefocus 0
-setup_widget_accel .toolbar.clear_plot {}
-
-# Pack widget .toolbar.machine_estop
-pack .toolbar.machine_estop \
-	-side left
-
-# Pack widget .toolbar.machine_power
-pack .toolbar.machine_power \
-	-side left
-
-# Pack widget .toolbar.rule0
-pack .toolbar.rule0 \
-	-fill y \
-	-padx 4 \
-	-pady 4 \
-	-side left
-
-# Pack widget .toolbar.file_open
-pack .toolbar.file_open \
-	-side left
-
-# Pack widget .toolbar.reload
-pack .toolbar.reload \
-	-side left
-
-# Pack widget .toolbar.rule4
-pack .toolbar.rule4 \
-	-fill y \
-	-padx 4 \
-	-pady 4 \
-	-side left
-
-# Pack widget .toolbar.program_run
-pack .toolbar.program_run \
-	-side left
-
-# Pack widget .toolbar.program_step
-pack .toolbar.program_step \
-	-side left
-
-# Pack widget .toolbar.program_pause
-pack .toolbar.program_pause \
-	-side left
-
-# Pack widget .toolbar.program_stop
-pack .toolbar.program_stop \
-	-side left
-
-# Pack widget .toolbar.rule8
-pack .toolbar.rule8 \
-	-fill y \
-	-padx 4 \
-	-pady 4 \
-	-side left
-
-# Pack widget .toolbar.program_blockdelete
-pack .toolbar.program_blockdelete \
-	-side left
-
-# Pack widget .toolbar.program_optpause
-pack .toolbar.program_optpause \
-	-side left
-
-# Pack widget .toolbar.rule9
-pack .toolbar.rule9 \
-	-fill y \
-	-padx 4 \
-	-pady 4 \
-	-side left
-
-
-# Pack widget .toolbar.view_zoomin
-pack .toolbar.view_zoomin \
-	-side left
-
-# Pack widget .toolbar.view_zoomout
-pack .toolbar.view_zoomout \
-	-side left
-
-# Pack widget .toolbar.view_z
-pack .toolbar.view_z \
-	-side left
-
-# Pack widget .toolbar.view_z2
-pack .toolbar.view_z2 \
-	-side left
-
-# Pack widget .toolbar.view_x
-pack .toolbar.view_x \
-	-side left
-
-# Pack widget .toolbar.view_y
-pack .toolbar.view_y \
-	-side left
-
-# Pack widget .toolbar.view_p
-pack .toolbar.view_p \
-	-side left
-
-# Pack widget .toolbar.rotate
-pack .toolbar.rotate \
-	-side left
-
-# Pack widget .toolbar.rule12
-pack .toolbar.rule12 \
-	-fill y \
-	-padx 4 \
-	-pady 4 \
-	-side left
-
-# Pack widget .toolbar.clear_plot
-pack .toolbar.clear_plot \
-	-side left
-
+## MAIN FRAME
 panedwindow .pane \
-        -borderwidth 0 \
+        -borderwidth 5 \
         -handlesize 5 \
         -orient v \
         -sashpad 0 \
-        -showhandle 1
+        -showhandle 0
 
 set pane_top [frame .pane.top]
 set pane_bottom [frame .pane.bottom]
@@ -779,546 +70,27 @@ ${pane_top}.tabs itemconfigure mdi -raisecmd "[list focus ${_tabs_mdi}.command];
 #${pane_top}.tabs raise manual
 after idle {
     ${pane_top}.tabs raise manual
-    ${pane_top}.right raise preview 
+    ${pane_top}.right raise preview
     after idle ${pane_top}.tabs compute_size
-    after idle ${pane_top}.right compute_size
+#    after idle ${pane_top}.right compute_size
 }
 
-label $_tabs_manual.axis
-setup_widget_accel $_tabs_manual.axis [_ Axis:]
 
-frame $_tabs_manual.axes
 
-radiobutton $_tabs_manual.axes.axisx \
-	-anchor w \
-	-padx 0 \
-	-value x \
-	-variable current_axis \
-	-width 2 \
-        -text X \
-        -command axis_activated
 
-radiobutton $_tabs_manual.axes.axisy \
-	-anchor w \
-	-padx 0 \
-	-value y \
-	-variable current_axis \
-	-width 2 \
-        -text Y \
-        -command axis_activated
+source /home/probotix/linuxcnc/configs/PROBOTIX/axis/tcl/tabs_manual_axes.tcl
 
-radiobutton $_tabs_manual.axes.axisz \
-	-anchor w \
-	-padx 0 \
-	-value z \
-	-variable current_axis \
-	-width 2 \
-        -text Z \
-        -command axis_activated
+source /home/probotix/linuxcnc/configs/PROBOTIX/axis/tcl/tabs_manual_jog.tcl
 
-radiobutton $_tabs_manual.axes.axisa \
-	-anchor w \
-	-padx 0 \
-	-value a \
-	-variable current_axis \
-	-width 2 \
-        -text A \
-        -command axis_activated
+source /home/probotix/linuxcnc/configs/PROBOTIX/axis/tcl/tabs_manual_spindle.tcl
 
-radiobutton $_tabs_manual.axes.axisb \
-	-anchor w \
-	-padx 0 \
-	-value b \
-	-variable current_axis \
-	-width 2 \
-        -text B \
-        -command axis_activated
+source /home/probotix/linuxcnc/configs/PROBOTIX/axis/tcl/tabs_manual_coolant.tcl
 
-radiobutton $_tabs_manual.axes.axisc \
-	-anchor w \
-	-padx 0 \
-	-value c \
-	-variable current_axis \
-	-width 2 \
-        -text C \
-        -command axis_activated
 
 
-radiobutton $_tabs_manual.axes.axisu \
-	-anchor w \
-	-padx 0 \
-	-value u \
-	-variable current_axis \
-	-width 2 \
-        -text U \
-        -command axis_activated
-
-radiobutton $_tabs_manual.axes.axisv \
-	-anchor w \
-	-padx 0 \
-	-value v \
-	-variable current_axis \
-	-width 2 \
-        -text V \
-        -command axis_activated
-
-radiobutton $_tabs_manual.axes.axisw \
-	-anchor w \
-	-padx 0 \
-	-value w \
-	-variable current_axis \
-	-width 2 \
-        -text W \
-        -command axis_activated
-
-# Grid widget $_tabs_manual.axes.axisa
-grid $_tabs_manual.axes.axisu \
-	-column 0 \
-	-row 2 \
-	-padx 4
-
-# Grid widget $_tabs_manual.axes.axisb
-grid $_tabs_manual.axes.axisv \
-	-column 1 \
-	-row 2 \
-	-padx 4
-
-# Grid widget $_tabs_manual.axes.axisc
-grid $_tabs_manual.axes.axisw \
-	-column 2 \
-	-row 2 \
-	-padx 4
-
-
-# Grid widget $_tabs_manual.axes.axisa
-grid $_tabs_manual.axes.axisa \
-	-column 0 \
-	-row 1 \
-	-padx 4
-
-# Grid widget $_tabs_manual.axes.axisb
-grid $_tabs_manual.axes.axisb \
-	-column 1 \
-	-row 1 \
-	-padx 4
-
-# Grid widget $_tabs_manual.axes.axisc
-grid $_tabs_manual.axes.axisc \
-	-column 2 \
-	-row 1 \
-	-padx 4
-
-# Grid widget $_tabs_manual.axes.axisx
-grid $_tabs_manual.axes.axisx \
-	-column 0 \
-	-row 0 \
-	-padx 4
-
-# Grid widget $_tabs_manual.axes.axisy
-grid $_tabs_manual.axes.axisy \
-	-column 1 \
-	-row 0 \
-	-padx 4
-
-# Grid widget $_tabs_manual.axes.axisz
-grid $_tabs_manual.axes.axisz \
-	-column 2 \
-	-row 0 \
-	-padx 4
-
-frame $_tabs_manual.joints
-
-radiobutton $_tabs_manual.joints.joint0 \
-	-anchor w \
-	-padx 0 \
-	-value x \
-	-variable current_axis \
-	-width 2 \
-        -text 0 \
-        -command axis_activated
-
-radiobutton $_tabs_manual.joints.joint1 \
-	-anchor w \
-	-padx 0 \
-	-value y \
-	-variable current_axis \
-	-width 2 \
-        -text 1 \
-        -command axis_activated
-
-radiobutton $_tabs_manual.joints.joint2 \
-	-anchor w \
-	-padx 0 \
-	-value z \
-	-variable current_axis \
-	-width 2 \
-        -text 2 \
-        -command axis_activated
-
-radiobutton $_tabs_manual.joints.joint3 \
-	-anchor w \
-	-padx 0 \
-	-value a \
-	-variable current_axis \
-	-width 2 \
-        -text 3 \
-        -command axis_activated
-
-radiobutton $_tabs_manual.joints.joint4 \
-	-anchor w \
-	-padx 0 \
-	-value b \
-	-variable current_axis \
-	-width 2 \
-        -text 4 \
-        -command axis_activated
-
-radiobutton $_tabs_manual.joints.joint5 \
-	-anchor w \
-	-padx 0 \
-	-value c \
-	-variable current_axis \
-	-width 2 \
-        -text 5 \
-        -command axis_activated
-
-
-radiobutton $_tabs_manual.joints.joint6 \
-	-anchor w \
-	-padx 0 \
-	-value u \
-	-variable current_axis \
-	-width 2 \
-        -text 6 \
-        -command axis_activated
-
-radiobutton $_tabs_manual.joints.joint7 \
-	-anchor w \
-	-padx 0 \
-	-value v \
-	-variable current_axis \
-	-width 2 \
-        -text 7 \
-        -command axis_activated
-
-radiobutton $_tabs_manual.joints.joint8 \
-	-anchor w \
-	-padx 0 \
-	-value w \
-	-variable current_axis \
-	-width 2 \
-        -text 8 \
-        -command axis_activated
-
-# Grid widget $_tabs_manual.joints.joint0
-grid $_tabs_manual.joints.joint0 \
-	-column 0 \
-	-row 0 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint1
-grid $_tabs_manual.joints.joint1 \
-	-column 1 \
-	-row 0 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint2
-grid $_tabs_manual.joints.joint2 \
-	-column 2 \
-	-row 0 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint3
-grid $_tabs_manual.joints.joint3 \
-	-column 0 \
-	-row 1 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint4
-grid $_tabs_manual.joints.joint4 \
-	-column 1 \
-	-row 1 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint5
-grid $_tabs_manual.joints.joint5 \
-	-column 2 \
-	-row 1 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint6
-grid $_tabs_manual.joints.joint6 \
-	-column 0 \
-	-row 2 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint7
-grid $_tabs_manual.joints.joint7 \
-	-column 1 \
-	-row 2 \
-	-padx 4
-
-# Grid widget $_tabs_manual.joints.joint8
-grid $_tabs_manual.joints.joint8 \
-	-column 2 \
-	-row 2 \
-	-padx 4
-
-frame $_tabs_manual.jogf
-frame $_tabs_manual.jogf.jog
-
-button $_tabs_manual.jogf.jog.jogminus \
-	-command {if {![is_continuous]} {jog_minus 1}} \
-	-padx 0 \
-	-pady 0 \
-	-width 2 \
-        -text -
-bind $_tabs_manual.jogf.jog.jogminus <Button-1> {
-    if {[is_continuous]} { jog_minus }
-}
-bind $_tabs_manual.jogf.jog.jogminus <ButtonRelease-1> {
-    if {[is_continuous]} { jog_stop }
-}
-
-button $_tabs_manual.jogf.jog.jogplus \
-	-command {if {![is_continuous]} {jog_plus 1}} \
-	-padx 0 \
-	-pady 0 \
-	-width 2 \
-        -text +
-bind $_tabs_manual.jogf.jog.jogplus <Button-1> {
-    if {[is_continuous]} { jog_plus }
-}
-bind $_tabs_manual.jogf.jog.jogplus <ButtonRelease-1> {
-    if {[is_continuous]} { jog_stop }
-}
-
-combobox $_tabs_manual.jogf.jog.jogincr \
-	-editable 0 \
-	-textvariable jogincrement \
-	-value [_ Continuous] \
-	-width 10
-$_tabs_manual.jogf.jog.jogincr list insert end [_ Continuous] 0.1000 0.0100 0.0010 0.0001
-
-frame $_tabs_manual.jogf.zerohome
-
-button $_tabs_manual.jogf.zerohome.home \
-	-command home_axis \
-	-padx 2m \
-	-pady 0
-setup_widget_accel $_tabs_manual.jogf.zerohome.home [_ "Home Axis"]
-
-button $_tabs_manual.jogf.zerohome.zero \
-	-command touch_off \
-	-padx 2m \
-	-pady 0
-setup_widget_accel $_tabs_manual.jogf.zerohome.zero [_ "Set Axis Origin"]
-
-checkbutton $_tabs_manual.jogf.override \
-	-command toggle_override_limits \
-	-variable override_limits
-setup_widget_accel $_tabs_manual.jogf.override [_ "Override Limits"]
-
-grid $_tabs_manual.jogf.zerohome \
-	-column 0 \
-	-row 1 \
-	-columnspan 3 \
-	-sticky w
-
-grid $_tabs_manual.jogf.jog \
-	-column 0 \
-	-row 0 \
-	-columnspan 3 \
-	-sticky w
-
-# Grid widget $_tabs_manual.jogf.zerohome.home
-grid $_tabs_manual.jogf.zerohome.home \
-	-column 0 \
-	-row 0 \
-	-ipadx 2 \
-	-pady 2 \
-	-sticky w
-
-# Grid widget $_tabs_manual.jogf.zerohome.zero
-grid $_tabs_manual.jogf.zerohome.zero \
-	-column 1 \
-	-row 0 \
-	-ipadx 2 \
-	-pady 2 \
-	-sticky w
-
-# Grid widget $_tabs_manual.jogf.override
-grid $_tabs_manual.jogf.override \
-	-column 0 \
-	-row 3 \
-	-columnspan 3 \
-	-pady 2 \
-	-sticky w
-
-# Grid widget $_tabs_manual.jogf.jog.jogminus
-grid $_tabs_manual.jogf.jog.jogminus \
-	-column 0 \
-	-row 0 \
-	-pady 2 \
-	-sticky nsw
-
-# Grid widget $_tabs_manual.jogf.jog.jogplus
-grid $_tabs_manual.jogf.jog.jogplus \
-	-column 1 \
-	-row 0 \
-	-pady 2 \
-	-sticky nsw
-
-# Grid widget $_tabs_manual.jogf.jog.jogincr
-grid $_tabs_manual.jogf.jog.jogincr \
-	-column 2 \
-	-row 0 \
-	-pady 2 \
-        -sticky nsw
-
-vspace $_tabs_manual.space1 \
-	-height 12
-
-label $_tabs_manual.spindlel
-setup_widget_accel $_tabs_manual.spindlel [_ Spindle:]
-
-frame $_tabs_manual.spindlef
-frame $_tabs_manual.spindlef.row1
-frame $_tabs_manual.spindlef.row2
-
-#label $_tabs_manual.spindlespl
-#setup_widget_accel $_tabs_manual.spindlespl [_ Speed:]
-
-radiobutton $_tabs_manual.spindlef.ccw \
-	-borderwidth 2 \
-	-command spindle \
-	-image [load_image spindle_ccw] \
-	-indicatoron 0 \
-	-selectcolor [systembuttonface] \
-	-value -1 \
-	-variable spindledir
-setup_widget_accel $_tabs_manual.spindlef.ccw {}
-
-radiobutton $_tabs_manual.spindlef.stop \
-	-borderwidth 2 \
-	-command spindle \
-	-indicatoron 0 \
-	-selectcolor [systembuttonface] \
-	-value 0 \
-	-variable spindledir
-setup_widget_accel $_tabs_manual.spindlef.stop [_ Stop]
-
-radiobutton $_tabs_manual.spindlef.cw \
-	-borderwidth 2 \
-	-command spindle \
-	-indicatoron 0 \
-	-selectcolor [systembuttonface] \
-	-value 1 \
-	-variable spindledir
-setup_widget_accel $_tabs_manual.spindlef.cw [_ Start]
-
-#setup_widget_accel $_tabs_manual.spindlef.cw {}
-#	-image [load_image spindle_cw] \
-
-button $_tabs_manual.spindlef.spindleminus \
-	-padx 0 \
-	-pady 0 \
-	-width 7
-bind $_tabs_manual.spindlef.spindleminus <Button-1> {
-	if {[%W cget -state] == "disabled"} { continue }
-	spindle_decrease
-}
-bind $_tabs_manual.spindlef.spindleminus <ButtonRelease-1> {
-	if {[%W cget -state] == "disabled"} { continue }
-	spindle_constant
-}
-setup_widget_accel $_tabs_manual.spindlef.spindleminus [_ "Speed -"]
-
-button $_tabs_manual.spindlef.spindleplus \
-	-padx 0 \
-	-pady 0 \
-	-width 7
-bind $_tabs_manual.spindlef.spindleplus <Button-1> {
-	if {[%W cget -state] == "disabled"} { continue }
-	spindle_increase
-}
-bind $_tabs_manual.spindlef.spindleplus <ButtonRelease-1> {
-	if {[%W cget -state] == "disabled"} { continue }
-	spindle_constant
-}
-setup_widget_accel $_tabs_manual.spindlef.spindleplus [_ "Speed +"]
-
-checkbutton $_tabs_manual.spindlef.brake \
-	-command brake \
-	-variable brake
-setup_widget_accel $_tabs_manual.spindlef.brake [_ Brake]
-
-# Grid widget $_tabs_manual.spindlef.brake
-grid $_tabs_manual.spindlef.brake \
-	-column 0 \
-	-row 3 \
-	-pady 2 \
-	-sticky w
-
-grid $_tabs_manual.spindlef.row1 -row 1 -column 0 -sticky nw
-grid $_tabs_manual.spindlef.row2 -row 2 -column 0 -sticky nw
-
-# Grid widget $_tabs_manual.spindlef.ccw
-pack $_tabs_manual.spindlef.ccw  \
-        -in $_tabs_manual.spindlef.row1 \
-        -side left \
-        -pady 2
-
-# Grid widget $_tabs_manual.spindlef.stop
-pack $_tabs_manual.spindlef.stop \
-        -in $_tabs_manual.spindlef.row1 \
-        -side left \
-        -pady 2 \
-        -ipadx 14
-
-# Grid widget $_tabs_manual.spindlef.cw
-pack $_tabs_manual.spindlef.cw \
-        -in $_tabs_manual.spindlef.row1 \
-        -side left \
-        -pady 2 \
-        -ipadx 14
-
-# Grid widget $_tabs_manual.spindlef.spindleminus
-pack $_tabs_manual.spindlef.spindleminus \
-        -in $_tabs_manual.spindlef.row2 \
-        -side left \
-        -pady 2
-
-# Grid widget $_tabs_manual.spindlef.spindleplus
-pack $_tabs_manual.spindlef.spindleplus \
-        -in $_tabs_manual.spindlef.row2 \
-        -side left \
-        -pady 2
-
-vspace $_tabs_manual.space2 \
-	-height 12
-
-label $_tabs_manual.coolant
-setup_widget_accel $_tabs_manual.coolant [_ Aux:]
-
-checkbutton $_tabs_manual.mist \
-	-command mist \
-	-variable mist
-setup_widget_accel $_tabs_manual.mist [_ Mist]
-
-checkbutton $_tabs_manual.flood \
-	-command flood \
-	-variable flood
-setup_widget_accel $_tabs_manual.flood [_ "Shop Vac (M8)"]
 
 grid rowconfigure $_tabs_manual 99 -weight 1
 grid columnconfigure $_tabs_manual 99 -weight 1
-# Grid widget $_tabs_manual.axes
-grid $_tabs_manual.axes \
-	-column 1 \
-	-row 0 \
-	-padx 0 \
-	-sticky w
 
 # Grid widget $_tabs_manual.axis
 grid $_tabs_manual.axis \
@@ -1327,19 +99,19 @@ grid $_tabs_manual.axis \
 	-pady 1 \
 	-sticky nw
 
-# Grid widget $_tabs_manual.coolant
-grid $_tabs_manual.coolant \
-	-column 0 \
-	-row 5 \
+# Grid widget $_tabs_manual.axes
+grid $_tabs_manual.axes \
+	-column 1 \
+	-row 0 \
+	-padx 0 \
 	-sticky w
 
-# Grid widget $_tabs_manual.flood
-grid $_tabs_manual.flood \
-	-column 1 \
-	-row 6 \
-	-columnspan 2 \
-	-padx 4 \
-	-sticky w
+# Grid widget $_tabs_manual.joglabel
+#grid $_tabs_manual.joglabel \
+#	-column 0 \
+#	-row 2 \
+#	-pady 1 \
+#	-sticky nw
 
 # Grid widget $_tabs_manual.jogf
 grid $_tabs_manual.jogf \
@@ -1348,149 +120,40 @@ grid $_tabs_manual.jogf \
 	-padx 4 \
 	-sticky w
 
-# Grid widget $_tabs_manual.mist
-grid $_tabs_manual.mist \
-	-column 1 \
+# Grid widget $_tabs_manual.spindlel
+grid $_tabs_manual.spindlel \
+	-column 0 \
 	-row 5 \
-	-columnspan 2 \
-	-padx 4 \
-	-sticky w
-
-# Grid widget $_tabs_manual.space1
-grid $_tabs_manual.space1 \
-	-column 0 \
-	-row 2
-
-# Grid widget $_tabs_manual.space2
-grid $_tabs_manual.space2 \
-	-column 0 \
-	-row 4
+	-pady 2 \
+	-sticky nw
 
 # Grid widget $_tabs_manual.spindlef
 grid $_tabs_manual.spindlef \
 	-column 1 \
-	-row 3 \
+	-row 5 \
 	-padx 4 \
 	-sticky w
 
-# Grid widget $_tabs_manual.spindlel
-grid $_tabs_manual.spindlel \
-	-column 0 \
-	-row 3 \
-	-pady 2 \
-	-sticky nw
-
-label $_tabs_mdi.historyl
-setup_widget_accel $_tabs_mdi.historyl [_ History:]
-
-# MDI-history listbox
-listbox $_tabs_mdi.history \
-    -width 40 \
-    -height 8 \
-    -exportselection 0 \
-    -selectmode extended \
-    -relief flat \
-    -highlightthickness 0 \
-    -takefocus 0 \
-    -yscrollcommand "$_tabs_mdi.history.sby set"
-# always have an empty element at the end
-$_tabs_mdi.history insert end ""
-
-scrollbar $_tabs_mdi.history.sby -borderwidth 0  -command "$_tabs_mdi.history yview"
-pack $_tabs_mdi.history.sby -side right -fill y
-grid rowconfigure $_tabs_mdi.history 0 -weight 1
-
-vspace $_tabs_mdi.vs1 \
-	-height 12
-
-label $_tabs_mdi.commandl
-setup_widget_accel $_tabs_mdi.commandl [_ "MDI Command:"]
-
-entry $_tabs_mdi.command \
-	-textvariable mdi_command
-
-button $_tabs_mdi.go \
-	-command send_mdi \
-	-padx 1m \
-	-pady 0
-setup_widget_accel $_tabs_mdi.go [_ Go]
-
-vspace $_tabs_mdi.vs2 \
-	-height 12
-
-label $_tabs_mdi.gcodel
-setup_widget_accel $_tabs_mdi.gcodel [_ "Active G-Codes:"]
-
-text $_tabs_mdi.gcodes \
-	-height 2 \
-	-width 20 \
-	-wrap word
-
-$_tabs_mdi.gcodes insert end {}
-$_tabs_mdi.gcodes configure -state disabled
-
-vspace $_tabs_mdi.vs3 \
-	-height 12
-
-# Grid widget $_tabs_mdi.command
-grid $_tabs_mdi.command \
-	-column 0 \
-	-row 4 \
-	-sticky ew
-
-# Grid widget $_tabs_mdi.commandl
-grid $_tabs_mdi.commandl \
-	-column 0 \
-	-row 3 \
-	-sticky w
-
-# Grid widget $_tabs_mdi.gcodel
-grid $_tabs_mdi.gcodel \
+# Grid widget $_tabs_manual.coolantl
+grid $_tabs_manual.coolantl \
 	-column 0 \
 	-row 6 \
 	-sticky w
 
-# Grid widget $_tabs_mdi.gcodes
-grid $_tabs_mdi.gcodes \
-	-column 0 \
-	-row 7 \
-	-columnspan 2 \
-	-sticky new
-
-# Grid widget $_tabs_mdi.go
-grid $_tabs_mdi.go \
+# Grid widget $_tabs_manual.coolantf
+grid $_tabs_manual.coolantf \
 	-column 1 \
-	-row 4
-
-# Grid widget $_tabs_mdi.history
-grid $_tabs_mdi.history \
-	-column 0 \
-	-row 1 \
-	-columnspan 2 \
-	-sticky nesw
-
-# Grid widget $_tabs_mdi.historyl
-grid $_tabs_mdi.historyl \
-	-column 0 \
-	-row 0 \
+	-row 6 \
+	-padx 4 \
 	-sticky w
 
-# Grid widget $_tabs_mdi.vs1
-grid $_tabs_mdi.vs1 \
-	-column 0 \
-	-row 2
 
-# Grid widget $_tabs_mdi.vs2
-grid $_tabs_mdi.vs2 \
-	-column 0 \
-	-row 5
 
-# Grid widget $_tabs_mdi.vs3
-grid $_tabs_mdi.vs3 \
-	-column 0 \
-	-row 8
-grid columnconfigure $_tabs_mdi 0 -weight 1
-grid rowconfigure $_tabs_mdi 1 -weight 1
+
+source /home/probotix/linuxcnc/configs/PROBOTIX/axis/tcl/mdi.tcl
+
+
+
 
 NoteBook ${pane_top}.right \
         -borderwidth 2 \
@@ -1505,10 +168,18 @@ $_tabs_numbers configure -borderwidth 1
 text ${_tabs_numbers}.text -width 1 -height 1 -wrap none \
 	-background [systembuttonface] \
 	-borderwidth 0 \
+	-undo 0 \
 	-relief flat
 pack ${_tabs_numbers}.text -fill both -expand 1
 bindtags ${_tabs_numbers}.text [list ${_tabs_numbers}.text . all]
 
+
+
+
+
+
+
+### BEGIN BOTTOM INFO BAR
 frame .info
 
 label .info.task_state \
@@ -1526,12 +197,12 @@ label .info.tool \
 	-textvariable tool \
 	-width 30
 
-label .info.offset \
-	-anchor w \
-	-borderwidth 2 \
-	-relief sunken \
-	-textvariable offset \
-	-width 25
+#label .info.offset \
+#	-anchor w \
+#	-borderwidth 2 \
+#	-relief sunken \
+#	-textvariable offset \
+#	-width 25
 
 label .info.position \
 	-anchor w \
@@ -1540,17 +211,55 @@ label .info.position \
 	-textvariable position \
 	-width 25
 
+label .info.g5x_coordinate_system \
+	-anchor w \
+	-borderwidth 2 \
+	-relief sunken \
+	-textvariable current_g5x \
+	-width 25
+
+label .info.commanded_spindle_speed \
+	-anchor w \
+	-borderwidth 2 \
+	-relief sunken \
+	-textvariable current_spindle_speed \
+	-width 25
+
+### END BOTTOM INFO BAR
+
+
+
+
 # Pack widget .info.task_state
 pack .info.task_state \
 	-side left
 
 # Pack widget .info.tool
 pack .info.tool \
-	-side left
+	-side left \
+	-fill x \
+	-expand 1
 
 # Pack widget .info.position
 pack .info.position \
 	-side left
+
+# Pack widget .info.g5x_coordinate_system
+pack .info.g5x_coordinate_system \
+	-side left
+
+# Pack widget .info.commanded_spindle_speed
+pack .info.commanded_spindle_speed \
+	-side left
+
+
+
+
+
+
+
+
+
 
 frame ${pane_bottom}.t \
 	-borderwidth 2 \
@@ -1559,6 +268,8 @@ frame ${pane_bottom}.t \
 
 text ${pane_bottom}.t.text \
 	-borderwidth 0 \
+  -background black \
+  -foreground green \
 	-exportselection 0 \
 	-height 9 \
 	-highlightthickness 0 \
@@ -1582,7 +293,10 @@ pack ${pane_bottom}.t.text \
 # Pack widget ${pane_bottom}.t.sb
 pack ${pane_bottom}.t.sb \
 	-fill y \
-	-side left
+	-side right
+
+
+
 
 frame ${pane_top}.ajogspeed
 label ${pane_top}.ajogspeed.l0 -text [_ "Rotary Jog Speed:"]
@@ -1590,9 +304,9 @@ label ${pane_top}.ajogspeed.l1
 scale ${pane_top}.ajogspeed.s -bigincrement 0 -from .06 -to 1 -resolution .020 -showvalue 0 -variable ajog_slider_val -command update_ajog_slider_vel -orient h -takefocus 0
 label ${pane_top}.ajogspeed.l -textv jog_aspeed -width 6 -anchor e
 pack ${pane_top}.ajogspeed.l0 -side left
-pack ${pane_top}.ajogspeed.l -side left
-pack ${pane_top}.ajogspeed.l1 -side left
 pack ${pane_top}.ajogspeed.s -side right
+pack ${pane_top}.ajogspeed.l1 -side right
+pack ${pane_top}.ajogspeed.l -side right
 bind . <less> [regsub %W [bind Scale <Left>] ${pane_top}.ajogspeed.s]
 bind . <greater> [regsub %W [bind Scale <Right>] ${pane_top}.ajogspeed.s]
 
@@ -1601,11 +315,11 @@ frame ${pane_top}.jogspeed
 label ${pane_top}.jogspeed.l0 -text [_ "Linear Jog Speed:"]
 label ${pane_top}.jogspeed.l1
 scale ${pane_top}.jogspeed.s -bigincrement 0 -from .06 -to 1 -resolution .020 -showvalue 0 -variable jog_slider_val -command update_jog_slider_vel -orient h -takefocus 0
-label ${pane_top}.jogspeed.l -textv jog_speed -width 6 -anchor e
+label ${pane_top}.jogspeed.l -textv jog_speed -width 4 -anchor e
 pack ${pane_top}.jogspeed.l0 -side left
-pack ${pane_top}.jogspeed.l -side left
-pack ${pane_top}.jogspeed.l1 -side left
 pack ${pane_top}.jogspeed.s -side right
+pack ${pane_top}.jogspeed.l1 -side right
+pack ${pane_top}.jogspeed.l -side right
 bind . , [regsub %W [bind Scale <Left>] ${pane_top}.jogspeed.s]
 bind . . [regsub %W [bind Scale <Right>] ${pane_top}.jogspeed.s]
 
@@ -1615,9 +329,9 @@ label ${pane_top}.maxvel.l1
 scale ${pane_top}.maxvel.s -bigincrement 0 -from .06 -to 1 -resolution .020 -showvalue 0 -variable maxvel_slider_val -command update_maxvel_slider_vel -orient h -takefocus 0
 label ${pane_top}.maxvel.l -textv maxvel_speed -width 6 -anchor e
 pack ${pane_top}.maxvel.l0 -side left
-pack ${pane_top}.maxvel.l -side left
-pack ${pane_top}.maxvel.l1 -side left
 pack ${pane_top}.maxvel.s -side right
+pack ${pane_top}.maxvel.l1 -side right
+pack ${pane_top}.maxvel.l -side right
 bind . <semicolon> [regsub %W [bind Scale <Left>] ${pane_top}.maxvel.s]
 bind . ' [regsub %W [bind Scale <Right>] ${pane_top}.maxvel.s]
 
@@ -1678,6 +392,7 @@ scale ${pane_top}.feedoverride.foscale \
 	-to 120.0 \
 	-variable feedrate
 
+
 label ${pane_top}.feedoverride.l
 setup_widget_accel ${pane_top}.feedoverride.l [_ "Feed Override:"]
 label ${pane_top}.feedoverride.m -width 1
@@ -1698,6 +413,13 @@ pack ${pane_top}.feedoverride.m \
 # Pack widget ${pane_top}.feedoverride.foentry
 pack ${pane_top}.feedoverride.foentry \
 	-side right
+
+
+
+
+
+
+
 
 toplevel .about
 bind .about <Key-Return> { wm wi .about }
@@ -1721,7 +443,7 @@ text .about.message \
 	.about.message configure -cursor hand2
 	.about.message tag configure link -foreground red}
 .about.message tag bind link <ButtonPress-1><ButtonRelease-1> {launch_website}
-.about.message insert end [subst [_ "PROBOTIX configurator version $pbx_version\n\nThis Axis version created for PROBOTIX Galaxy Series CNC Routers.\n\nLinuxCNC/AXIS version \$version\n\nCopyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Jeff Epler and Chris Radek.\n\nThis is free software, and you are welcome to redistribute it under certain conditions.  See the file COPYING, included with LinuxCNC.\n\nVisit the LinuxCNC web site: "]] {} {http://www.linuxcnc.org/} link
+.about.message insert end [subst [_ "PROBOTIX LinuxCNC/AXIS version \$version\n\nCopyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Jeff Epler and Chris Radek.\n\nThis is free software, and you are welcome to redistribute it under certain conditions.  See the file COPYING, included with LinuxCNC.\n\nVisit the LinuxCNC web site: "]] {} {http://www.linuxcnc.org/} link
 .about.message configure -state disabled
 
 button .about.ok \
@@ -1854,7 +576,17 @@ grid .toolbar \
 grid columnconfigure . 0 -weight 1
 grid rowconfigure . 1 -weight 1
 
-# vim:ts=8:sts=8:noet:sw=8
+
+
+
+
+
+
+
+
+
+
+
 
 set TASK_MODE_MANUAL 1
 set TASK_MODE_AUTO 2
@@ -1877,10 +609,19 @@ set manual [concat [winfo children $_tabs_manual.axes] \
     $_tabs_manual.jogf.zerohome.home \
     $_tabs_manual.jogf.jog.jogminus \
     $_tabs_manual.jogf.jog.jogplus \
-    $_tabs_manual.spindlef.cw $_tabs_manual.spindlef.ccw \
-    $_tabs_manual.spindlef.stop $_tabs_manual.spindlef.brake \
-    $_tabs_manual.flood $_tabs_manual.mist $_tabs_mdi.command \
-    $_tabs_mdi.go $_tabs_mdi.history]
+    $_tabs_manual.spindlef.cw \
+    $_tabs_manual.spindlef.ccw \
+    $_tabs_manual.spindlef.stop \
+    $_tabs_manual.spindlef.brake \
+    $_tabs_manual.flood \
+    $_tabs_manual.mist \
+    $_tabs_mdi.command \
+    $_tabs_mdi.go \
+    $_tabs_mdi.history \
+    $_tabs_manual.jogf.zerohome.xyzero \
+    $_tabs_manual.jogf.zerohome.zzero \
+    $_tabs_manual.jogf.jog.jogincr \
+    ]
 
 proc disable_group {ws} { foreach w $ws { $w configure -state disabled } }
 proc enable_group {ws} { foreach w $ws { $w configure -state normal } }
@@ -1933,12 +674,12 @@ proc update_state {args} {
     relief {$task_state == $STATE_ESTOP} .toolbar.machine_estop
     state  {$task_state != $STATE_ESTOP} \
         .toolbar.machine_power {.menu.machine "Toggle _Machine Power"}
-    relief {$task_state == $STATE_ON}    .toolbar.machine_power 
+    relief {$task_state == $STATE_ON}    .toolbar.machine_power
 
     state  {$interp_state == $INTERP_IDLE && $taskfile != ""} \
         .toolbar.reload {.menu.file "_Reload"}
     state  {$taskfile != ""} \
-        .toolbar.reload {.menu.file "_Save gcode as..."}
+        {.menu.file "_Save gcode as..."}
     state  {$interp_state == $INTERP_IDLE && $taskfile != "" && $::has_editor} \
         {.menu.file "_Edit..."}
     state  {$taskfile != ""} {.menu.file "_Properties..."}
@@ -2022,12 +763,19 @@ proc update_state {args} {
     set ::last_interp_state $::interp_state
     set ::last_task_state $::task_state
 
+
+### EDITED BY PROBOTIX
     if {$::on_any_limit} {
-        $::_tabs_manual.jogf.override configure -state normal
+#        $::_tabs_manual.jogf.override configure -state normal
+        $::_tabs_manual.jogf.jog.override configure -state normal
     } else {
-        $::_tabs_manual.jogf.override configure -state disabled
+#        $::_tabs_manual.jogf.override configure -state disabled
+        $::_tabs_manual.jogf.jog.override configure -state disabled
     }
 }
+###
+
+
 
 proc set_mode_from_tab {} {
     set page [${::pane_top}.tabs raise]
@@ -2047,10 +795,10 @@ proc joint_mode_switch {args} {
         grid forget $::_tabs_manual.joints
         grid $::_tabs_manual.axes -column 1 -row 0 -padx 0 -pady 0 -sticky w
         setup_widget_accel $::_tabs_manual.axis [_ Axis:]
-    }    
+    }
 }
 
-proc queue_update_state {args} { 
+proc queue_update_state {args} {
     after cancel update_state
     after idle update_state
 }
@@ -2122,8 +870,8 @@ foreach c {Entry Spinbox} {
 
     foreach b { Left Right
             Up Down Prior Next Home
-            Left Right Up Down 
-            Prior Next Home 
+            Left Right Up Down
+            Prior Next Home
             End } {
         bind $c <KeyPress-$b> {+if {[%W cget -state] == "normal"} break}
         bind $c <KeyRelease-$b> {+if {[%W cget -state] == "normal"} break}
@@ -2237,7 +985,7 @@ proc places {s1 s2} {
     for {set i 15} {$i < $l1 && $i < $l2} {incr i} {
         set c1 [string index $s1 $i]
         set c2 [string index $s2 $i]
-        if {$c1 != "0" && $c1 != "." && $c1 != $c2} { return $i } 
+        if {$c1 != "0" && $c1 != "." && $c1 != $c2} { return $i }
     }
     return [string length $s1]
 }
@@ -2367,13 +1115,13 @@ DynamicHelp::add $_tabs_manual.axes.axisc -text [_ "Activate axis \[5\]"]
 DynamicHelp::add $_tabs_manual.jogf.jog.jogminus -text [_ "Jog selected axis"]
 DynamicHelp::add $_tabs_manual.jogf.jog.jogplus -text [_ "Jog selected axis"]
 DynamicHelp::add $_tabs_manual.jogf.jog.jogincr -text [_ "Select jog increment"]
-DynamicHelp::add $_tabs_manual.jogf.override -text [_ "Temporarily allow jogging outside machine limits \[L\]"]
+DynamicHelp::add $_tabs_manual.jogf.jog.override -text [_ "Temporarily allow jogging outside machine limits \[L\]"]
 
 # On at least some versions of Tk (tk8.4 on ubuntu 6.06), this hides files
 # beginning with "." from the open dialog.  Who knows what it does on other
 # versions.
 catch {
-    auto_load ::tk::dialog::file:: 
+    auto_load ::tk::dialog::file::
     namespace eval ::tk::dialog::file {}
     set ::tk::dialog::file::showHiddenBtn 1
     set ::tk::dialog::file::showHiddenVar 0

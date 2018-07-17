@@ -18,7 +18,6 @@
 - Fix RS274_STARTUP_CODE to clear tool and offset
 - Make insmod edimax permanent
 - Probe from shorter height
-- Add support for older gamepads
 - Check for error on script keyboard input
 - Finish ngc2 filter
 - Rotate g-code functions
@@ -27,6 +26,46 @@
 - Put axis files back in original directories
 
 ## [Unreleased]
+### Changed
+### Added
+- Series selection
+- Ability to read previous config file and load options to allow changing individual options
+### Fixed
+- Only accept numbers for ZPUCK
+
+## [2.4.0] - 2018-07-16
+### Changed
+- Set default options for some machines like V90MK2 to prevent prompting
+- Reverted hard-coding ATLaS X and Y coordinates to 100.ngc instead of emc.var file
+- Initial prompt now asks to configure machine or update software
+- Placed prompt for router mount after sensor prompt as we only need to know mount type for ATLaS usage
+### Added
+- More descriptions for questions
+### Fixed
+- Only accept numbers for ORDER_NO
+
+## [2.3.2] - 2018-06-13
+### Added
+- Descriptions for parts
+### Fixed
+- Z-puck travel now correctly uses max travel determined by uprights
+- Remove ATLaS code from probotix.hal when not used to prevent tripping probe
+### Changed
+- Function for prompting now handles descriptions
+- Reordered prompts
+- New logo desktop background
+- Prompt to remove emc2 directory and continue
+- Pause on error instead of waiting 10 seconds
+
+## [2.3.1] - 2018-04-23
+### Added
+- Router Speed indicator for use with SPID
+### Changed
+- Save ATLaS X and Y coordinates to emc.var file instead of hard-coding to 100.ngc
+### Fixed
+- Reverted or2 count in probotix.hal to properly handle gamepads
+- Reverted loading mux4 at top of probotix.hal to account for gamepads/MPGs
+- Table Extents ATLaS X&Y locations
 
 ## [2.2.2] - 2018-03-21
 ### Added
