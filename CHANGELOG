@@ -26,12 +26,15 @@
 - Put axis files back in original directories
 
 ## [Unreleased]
+
+## [2.4.1] - 2018-07-24
 ### Changed
+- Reverted back to gedit for tool table editing as tooledit seems broken
+- Updated tool table to LinuxCNC v2.5 formatting
 ### Added
-- Series selection
-- Ability to read previous config file and load options to allow changing individual options
+- Archive linuxcnc folder with errors in grab_errors.sh
 ### Fixed
-- Only accept numbers for ZPUCK
+- SPID code was still being copied when VFD was selected
 
 ## [2.4.0] - 2018-07-16
 ### Changed

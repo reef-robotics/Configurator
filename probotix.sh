@@ -5,7 +5,7 @@
 # 	Originally by Len Shelton
 # 	Updated by Kaden Lewis
 #
-_VERSION="2.4.0"
+_VERSION="2.4.1"
 
 ###################################################################################################
 # 	some variables
@@ -573,13 +573,9 @@ do
 				case $y in
 					"Yes" )
 						SPID="YES"
-						# remove router code
-						f_log "removing router controls from hal file"
-						sed -i '/ROUTER/,+6d' .TEMP.hal
 						break;;
 					"No" )
 						SPID="NO"
-						sed -i '/PWM/,+5d' .TEMP.hal
 						break;;
 				esac
 			done
@@ -588,11 +584,11 @@ do
 			f_log "removing spindle from hal files"
 			sed -i '/SPINDLE/,+11d' .TEMP.hal
 			sed -i '/SPINDLE_SPEED/,+13d' .TEMP.xml
-			sed -i '/VFD/,+3d' .TEMPpostgui.hal
 			break;;
 		"VFD Spindle" )
 			SPINDLE="VFD"
 			MOUNT="LONG"
+			SPID="NO"
 			# remove router code
 			f_log "removing router controls from hal file"
 			sed -i '/ROUTER/,+6d' .TEMP.hal
@@ -600,13 +596,25 @@ do
 	esac
 done
 
-if [ $SPID != "YES" ]
+case $SPID in
+	"YES" )
+		# remove router code
+		f_log "removing router controls from hal file"
+		sed -i '/ROUTER/,+6d' .TEMP.hal
+		;;
+	"NO" )
+		# remove superpid code
+		f_log "removing superpid from hal files"
+		sed -i '/SUPERPID/,+10d' .TEMP.hal
+		sed -i '/ROUTER_SPEED/,+13d' .TEMP.xml
+		;;
+esac
+
+if [ "$SPINDLE" = "ROUTER" ] && [ "$SPID" = "NO" ]
 then
-	SPID="NO"
 	# remove superpid code
-	f_log "removing superpid from hal files"
-	sed -i '/SUPERPID/,+10d' .TEMP.hal
-	sed -i '/ROUTER_SPEED/,+13d' .TEMP.xml
+	sed -i '/PWM/,+5d' .TEMP.hal
+	sed -i '/VFD/,+3d' .TEMPpostgui.hal
 fi
 
 f_log "SPINDLE=$SPINDLE" "both"
@@ -1116,21 +1124,24 @@ f_log "replace vars in ini file"
 ###################################################################################################
 #	Save the TEMP files
 #
-# create link to nc_files on desktop
-ln -sf /home/probotix/linuxcnc/nc_files/ /home/probotix/Desktop/nc_files
-f_log "create nc_files desktop link"
-
 # create link to LinuxCNC on desktop
 sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' .TEMP.desktop
 cp .TEMP.desktop /home/probotix/Desktop/$MACHINE.desktop
 f_log "save LinuxCNC desktop link"
+
+# wait for LinuxCNC icon to be created
+sleep 1
+
+# create link to nc_files on desktop
+ln -sf /home/probotix/linuxcnc/nc_files/ /home/probotix/Desktop/nc_files
+f_log "create nc_files desktop link"
 
 # move the temp files to LinuxCNC dir
 cp .TEMP.ini /home/probotix/linuxcnc/configs/PROBOTIX/probotix.ini
 cp .TEMP.hal /home/probotix/linuxcnc/configs/PROBOTIX/probotix.hal
 cp .TEMPpostgui.hal /home/probotix/linuxcnc/configs/PROBOTIX/postgui.hal
 cp .TEMP.xml /home/probotix/linuxcnc/configs/PROBOTIX/pyvcp.xml
-#cp .tool.tbl /home/probotix/linuxcnc/configs/PROBOTIX/tool.tbl
+cp .tool.tbl /home/probotix/linuxcnc/configs/PROBOTIX/tool.tbl
 cp .emc.nml  /home/probotix/linuxcnc/configs/PROBOTIX/emc.nml
 cp .TEMPemc.var  /home/probotix/linuxcnc/configs/PROBOTIX/emc.var
 cp .TEMP102.ngc /home/probotix/linuxcnc/nc_files/subs/102.ngc
