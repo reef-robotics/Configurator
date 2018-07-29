@@ -5,7 +5,7 @@
 # 	Originally by Len Shelton
 # 	Updated by Kaden Lewis
 #
-_VERSION="2.4.1"
+_VERSION="2.4.2"
 
 ###################################################################################################
 # 	some variables
@@ -810,6 +810,10 @@ ATLAS_X=-0.075
 case $MOUNT in
 	"LONG" )
 		ATLAS_Y=3.5533
+		if [ "$UPRIGHT" = "TALL" ]
+		then
+			ATLAS_Y=3.0755
+		fi
 		;;
 	"SHORT" )
 		ATLAS_Y=3.3883

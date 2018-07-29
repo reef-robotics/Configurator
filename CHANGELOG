@@ -27,6 +27,10 @@
 
 ## [Unreleased]
 
+## [2.4.2] - 2018-07-29
+### Fixed
+- Corrected ATLAS_Y for tall uprights
+
 ## [2.4.1] - 2018-07-24
 ### Changed
 - Reverted back to gedit for tool table editing as tooledit seems broken
