@@ -5,7 +5,7 @@
 # 	Originally by Len Shelton
 # 	Updated by Kaden Lewis
 #
-_VERSION="2.4.2"
+_VERSION="2.5.0"
 
 ###################################################################################################
 # 	some variables
@@ -34,18 +34,13 @@ f_prompt() {
 
 f_log() {
 	case $2 in
-		"show" )
+		"show" | "" )
 			echo "$1"
-			# fall thru
-			;&
-		"log" | "" )
-			echo "$1" >> $LOG_FILE
-			;;
-		"config" )
-			echo "$1" >> $CONFIG_FILE
-			;;
-		"both" )
-			echo "$1" >> $LOG_FILE
+			;& # fall thru
+		"log" | "both" )
+			echo "[$DATETIME] $1" >> $LOG_FILE
+			;;& # continue matching
+		"config" | "both" )
 			echo "$1" >> $CONFIG_FILE
 			;;
 	esac
@@ -105,24 +100,11 @@ fi
 
 if [ -d "/home/probotix/emc2" ]
 then
-	f_log "EMC2 directory found!" "show"
-	f_prompt "Do you wish to contine?" "* This will delete your existing EMC2 folder."
-	select x in "Yes" "No";
-	do
-		case $x in
-			"Yes" )
-				tar -P -czf /home/probotix/.backup.emc2.tar.gz /home/probotix/emc2/
-				f_log "EMC2 Backup Created!"
-				rm -Rf /home/probotix/emc2
-				break;;
-			"No" )
-				echo "Call PROBOTIX 844.472.9262"
-				echo "You appear to be running an old version of LinuxCNC."
-				f_pause
-				exit
-				break;;
-		esac
-	done
+	f_log "EMC2 directory found!"
+	echo "Call PROBOTIX 844.472.9262"
+	echo "You appear to be running an old version of LinuxCNC."
+	f_pause
+	exit
 fi
 
 # if log exists
@@ -279,8 +261,8 @@ sudo ln -s /home/probotix/linuxcnc/configs/PROBOTIX/axis /usr/share/axis
 f_log "create symlink to axis" "show"
 
 # install fixed tooledit
-sudo cp -f .tooledit /usr/bin/tooledit
-f_log "copy fixed tooledit" "show"
+#sudo cp -f .tooledit /usr/bin/tooledit
+#f_log "copy fixed tooledit" "show"
 
 # install customized files
 sudo cp -f .show_errors.tcl /usr/lib/tcltk/linuxcnc/show_errors.tcl
@@ -334,7 +316,7 @@ f_log "create temporary files"
 ###################################################################################################
 # 	this section tries to identify the add-on parallel port address
 #
-LSPCI=$(lspci -v | grep NetMos)
+LSPCI=$(lspci -v | grep -i "parallel")
 if [ -z "$LSPCI" ]
 then
 	f_log "SECOND PARALLEL PORT NOT FOUND" "show"

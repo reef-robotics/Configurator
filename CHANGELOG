@@ -27,6 +27,14 @@
 
 ## [Unreleased]
 
+## [2.5.0] - 2018-08-27
+### Fixed
+- Parallel card search function updated to support non-NetMos cards
+### Changed
+- Reverted handling EMC2 folder to only show warning and exit
+### Removed
+- No longer overwrite installed tooledit with broken version
+
 ## [2.4.2] - 2018-07-29
 ### Fixed
 - Corrected ATLAS_Y for tall uprights
