@@ -4,3 +4,5 @@ LSPCI.txt
 apt_mirror.sh
 restore_gnome.sh
 update_servers.sh
+.stepconf
+.tooledit
