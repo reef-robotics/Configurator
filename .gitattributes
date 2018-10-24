@@ -6,6 +6,8 @@
 *.var text eol=lf
 *.tbl text eol=lf
 *.tcl text eol=lf
+*.hal text eol-lf
+*.ini text eol-lf
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary
