@@ -1,31 +1,31 @@
 o100 SUB
 
-(G59.3 holds coordinates for ATLaS)
-(#<_ATLAS_X> = [#5381])
+(#1 tool number as passed by CALL)
+(#<_ATLAS_X> = [#5381])				(G59.3 holds coordinates for ATLaS)
 (#<_ATLAS_Y> = [#5382])
-#<_ATLAS_X> = REPLACE_ATLAS_X
-#<_ATLAS_Y> = REPLACE_ATLAS_Y
-#<_MULTIPLIER> = REPLACE_MULTIPLIER
-#<_Z_MIN> = REPLACE_ZMIN
-#<_X_PARK> = REPLACE_X_PARK
+#<_ATLAS_X> = REPLACE_ATLAS_X		(absolute machine X position of tool sensor)
+#<_ATLAS_Y> = REPLACE_ATLAS_Y		(absolute machine Y position of tool sensor)
+#<_MULTIPLIER> = REPLACE_MULTIPLIER					(1 for INCH or 25.4 for MM)
+#<_Z_MIN> = REPLACE_ZMIN						(maximum Z- probe search distance)
+#<_X_PARK> = REPLACE_X_PARK			(front center of machine)
+
+M5 M9								(turn off spindle and shop vac)
+REPLACE_GUNITS									(set units)
+G53 G90 G0 Z0						(retract z)
 
 (#5400 is current tool number)
-(#1 must be passed as tool number)
-
-M5 M9						(turn off spindle and shop vac)
-REPLACE_GUNITS					(set units)
-G53 G90 G0 Z0 					(retract z)
-
-o101 if [#1 NE #5400] 				(if tool number has changed)
-G53 G0 X#<_X_PARK> Y0			(drive out to front of machine)
-T#1 M6 						(tool change prompt)
+o101 if [#1 NE #5400]				(if tool number has changed)
+	G53 G0 X#<_X_PARK> Y0			(drive out to front of machine)
+	M6 T#1	 						(tool change prompt)
 o101 endif
 
-G53 G0 X#<_ATLAS_X> Y#<_ATLAS_Y>		(move over tool sensor)
+G53 G0 X#<_ATLAS_X> Y#<_ATLAS_Y>				(move over tool sensor)
+G10 L2 P9 Z0									(remove Z offset in G59.3)
 G91 G38.2 Z-#<_Z_MIN> F[10 * #<_MULTIPLIER>]	(feed down until probe is active)
-G10 L11 P#1 Z0 R0				(set tool table)
-G53 G90 G0 Z0				(retract most of the way up)
-G43
+G10 L11 P#1 Z0 R0					(set tool table)
+G53 G90 G0 Z0						(retract most of the way up)
+G43									(enable tool length compensation)
 G91 X[2 * #<_MULTIPLIER>]			(move over 2 inches to right)
-G90						(jump back into absolute mode)
+G90									(jump back into absolute mode)
+
 o100 ENDSUB

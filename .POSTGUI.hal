@@ -1,9 +1,35 @@
-#VFD
+# PROBOTIX PostGUI file
+# VFD
 net spindle-cmd => abs.0.in
 net absolute-spindle-vel <= abs.0.out => pyvcp.spindle-speed
 setp halui.jog-speed 10
 
-#GAMEPAD
+# PROBE_LED
+net probe-in => pyvcp.probe-led
+
+# HALUI_FIRST_TOOL
+net load_t1 pyvcp.o100 halui.mdi-command-00
+
+# HALUI_ZPUCK
+net z_probe pyvcp.o102 halui.mdi-command-01
+
+# HALUI_TOUCH
+net touch-xy pyvcp.touch-xy halui.mdi-command-02
+net touch-z pyvcp.touch-z halui.mdi-command-03
+
+# HALUI_COMMON
+net btf pyvcp.btf halui.mdi-command-04
+net par pyvcp.par halui.mdi-command-05
+net rthome pyvcp.rthome halui.mdi-command-06
+net rtzero pyvcp.rtzero halui.mdi-command-07
+net rsc_reset pyvcp.rsc_reset halui.mdi-command-08
+net reset-offset pyvcp.reset-offset halui.mdi-command-10
+
+# LASER
+net laser-cmd => pyvcp.laser-pwr
+net laser-off pyvcp.laser-off halui.mdi-command-09
+
+# GAMEPAD
 addf or2.2 servo-thread
 addf or2.3 servo-thread
 addf mux4.0 servo-thread
@@ -34,28 +60,3 @@ net joy-y-jog halui.jog.1.analog <= sum2.0.out
 setp sum2.1.gain0 -1
 net reverse-z sum2.1.in0 <= input.0.abs-ry-position
 net joy-z-jog halui.jog.2.analog <= sum2.1.out
-
-#HALUI_FIRST_TOOL
-net load_t1 pyvcp.o100 halui.mdi-command-00
-
-#HALUI_COMMON
-net btf pyvcp.btf halui.mdi-command-02
-net par pyvcp.par halui.mdi-command-01
-net rtzero pyvcp.rtzero halui.mdi-command-07
-net rthhome pyvcp.rthome halui.mdi-command-06
-#net g64_1 pyvcp.g64_1 halui.mdi-command-08
-#net g64_2 pyvcp.g64_2 halui.mdi-command-09
-#net g64_3 pyvcp.g64_3 halui.mdi-command-10
-net rsc_reset pyvcp.rsc_reset halui.mdi-command-11
-
-#HALUI_ZPUCK
-net z_probe pyvcp.o102 halui.mdi-command-03
-
-#HALUI_XY_ORIGIN
-net xy_touch pyvcp.xy halui.mdi-command-04
-
-#HALUI_ZORIGIN
-net zorigin pyvcp.zorigin halui.mdi-command-05
-
-#PROBE_LED
-net probe-in => pyvcp.probe-led

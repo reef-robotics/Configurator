@@ -1,133 +1,128 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<!-- PROBOTIX PyVCP sidebar -->
 <pyvcp>
-<!-- SPINDLE_SPEED -->
+	<!-- SPINDLE_SPEED -->
+	<labelframe text="Spindle Speed">
+		<vbox>
+			<bd>4</bd>
+			<bar>
+				<halpin>"spindle-speed"</halpin>
+				<max_>24000</max_>
+				<!--<min_>7000</min_>-->
+			</bar>
+		</vbox>
+	</labelframe>
+	<!-- ROUTER_SPEED -->
+	<labelframe text="Router Speed">
+		<vbox>
+			<bd>4</bd>
+			<bar>
+				<halpin>"spindle-speed"</halpin>
+				<max_>30000</max_>
+				<min_>5000</min_>
+			</bar>
+		</vbox>
+	</labelframe>
+	<!-- LASER -->
+	<labelframe text="Laser">
+		<vbox>
+			<bd>4</bd>
+			<bar>
+				<halpin>"laser-pwr"</halpin>
+				<max_>100</max_>
+				<fillcolor>"red"</fillcolor>
+			</bar>
+			<button>
+				<halpin>"laser-off"</halpin>
+				<text>"Laser OFF"</text>
+				<font>('fixed',10)</font>
+			</button>
+		</vbox>
+	</labelframe>
+	<!-- SENSORS -->
+	<labelframe text="Sensors">
+		<!-- PROBE -->
+		<hbox>
+			<bd>10</bd>
+			<label>
+				<text>"            PROBE:"</text>
+				<font>("fixed",10)</font>
+			</label>
+			<led>
+				<halpin>"probe-led"</halpin>
+				<on_color>"blue"</on_color>
+				<off_color>"gray"</off_color>
+				<size>15</size>
+				<pady>50</pady>
+			</led>
+		</hbox>
+		<vbox>
+			<bd>10</bd>
+			<!-- ATLAS -->
+			<button>
+				<halpin>"o100"</halpin>
+				<text>"Measure 1st Tool"</text>
+				<font>('fixed',10)</font>
+			</button>
+			<!-- ZPUCK -->
+			<button>
+				<halpin>"o102"</halpin>
+				<text>"Set Z Origin w/ Puck"</text>
+				<font>('fixed',10)</font>
+			</button>
+		</vbox>
+	</labelframe>
+	<!-- SET_ORIGIN -->
+	<labelframe text="Set Axis Origins">
+		<vbox>
+			<bd>10</bd>
+			<button>
+				<halpin>"touch-xy"</halpin>
+				<text>"Touch-off X/Y"</text>
+				<font>('fixed',10)</font>
+			</button>
+			<button>
+				<halpin>"touch-z"</halpin>
+				<text>"Touch-off Z"</text>
+				<font>('fixed',10)</font>
+			</button>
+		</vbox>
+	</labelframe>
+	<labelframe text="Machine">
+		<vbox>
+			<bd>10</bd>
+			<button>
+				<halpin>"btf"</halpin>
+				<text>"Bring To Front"</text>
+				<font>('fixed',10)</font>
+			</button>
+			<button>
+				<halpin>"par"</halpin>
+				<text>"Park At Rear"</text>
+				<font>('fixed',10)</font>
+			</button>
+			<button>
+				<halpin>"rthome"</halpin>
+				<text>"Return To Home"</text>
+				<font>('fixed',10)</font>
+			</button>
+			<button>
+				<halpin>"rtzero"</halpin>
+				<text>"Return To X/Y Origin"</text>
+				<font>('fixed',10)</font>
+			</button>
+		</vbox>
+	</labelframe>
 	<vbox>
-		<relief>RIDGE</relief>
-		<bd>4</bd>
-		<label>
-			<text>"Spindle Speed:"</text>
-			<font>("fixed",10)</font>
-		</label>
-		<bar>
-			<halpin>"spindle-speed"</halpin>
-			<max_>24000</max_>
-			<!--<min_>7000</min_>-->
-		</bar>
-	</vbox>
-
-<!-- ROUTER_SPEED -->
-	<vbox>
-		<relief>RIDGE</relief>
-		<bd>4</bd>
-		<label>
-			<text>"Router Speed:"</text>
-			<font>("fixed",10)</font>
-		</label>
-		<bar>
-			<halpin>"spindle-speed"</halpin>
-			<max_>30000</max_>
-			<min_>5000</min_>
-		</bar>
-	</vbox>
-
-<!-- PROBE -->
-	<hbox>
-		<relief>FLAT</relief>
-		<bd>10</bd>
-		<label>
-			<text>"              PROBE:"</text>
-			<font>("fixed",10)</font>
-		</label>
-		<led>
-			<halpin>"probe-led"</halpin>
-			<on_color>"blue"</on_color>
-			<off_color>"gray"</off_color>
-			<size>15</size>
-			<pady>50</pady>
-		</led>
-	</hbox>
-
-	<vbox>
-		<relief>FLAT</relief>
-		<bd>10</bd>
-		<button>
-			<halpin>"btf"</halpin>
-			<text>"Bring To Front"</text>
-			<font>('fixed',10)</font>
-		</button>
-		<button>
-			<halpin>"par"</halpin>
-			<text>"Park At Rear"</text>
-			<font>('fixed',10)</font>
-		</button>
-		<button>
-			<halpin>"rthome"</halpin>
-			<text>"Return To Home"</text>
-			<font>('fixed',10)</font>
-		</button>
-		<button>
-			<halpin>"rtzero"</halpin>
-			<text>"Return To X/Y Origin"</text>
-			<font>('fixed',10)</font>
-		</button>
-	</vbox>
-
-	<vbox>
-		<relief>FLAT</relief>
-		<bd>10</bd>
-<!-- ATLAS -->
-		<button>
-			<halpin>"o100"</halpin>
-			<text>"Measure 1st Tool"</text>
-			<font>('fixed',10)</font>
-		</button>
-<!-- ZPUCK -->
-		<button>
-			<halpin>"o102"</halpin>
-			<text>"Set Z Origin w/ Puck"</text>
-			<font>('fixed',10)</font>
-		</button>
-<!-- ZORIGIN -->
-		<button>
-			<halpin>"zorigin"</halpin>
-			<text>"Set Z Origin"</text>
-			<font>('fixed',10)</font>
-		</button>
-		<button>
-			<halpin>"xy"</halpin>
-			<text>"Set X/Y Origin"</text>
-			<font>('fixed',10)</font>
-		</button>
-	</vbox>
-
-<!--
-	<vbox>
-		<relief>FLAT</relief>
-		<bd>10</bd>
-		<button>
-			<halpin>"g64_1"</halpin>
-			<text>"G64 P0.001"</text>
-			<font>('fixed',10)</font>
-		</button>
-		<button>
-			<halpin>"g64_2"</halpin>
-			<text>"G64 P0.010"</text>
-			<font>('fixed',10)</font>
-		</button>
-		<button>
-			<halpin>"g64_3"</halpin>
-			<text>"G64 P0.040"</text>
-			<font>('fixed',10)</font>
-		</button>
-	</vbox>
--->
-
-	<vbox>
-		<relief>FLAT</relief>
 		<bd>6</bd>
 		<button>
 			<halpin>"rsc_reset"</halpin>
 			<text>"G-code Reset"</text>
+			<font>('fixed',10)</font>
+		</button>
+		<button>
+			<halpin>"reset-offset"</halpin>
+			<text>"Reset Offsets"</text>
 			<font>('fixed',10)</font>
 		</button>
 	</vbox>

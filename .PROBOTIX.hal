@@ -1,4 +1,4 @@
-# Probotix HAL Configuration
+# PROBOTIX HAL Configuration
 
 loadrt trivkins
 loadrt [EMCMOT]EMCMOT base_period_nsec=[EMCMOT]BASE_PERIOD servo_period_nsec=[EMCMOT]SERVO_PERIOD traj_period_nsec=[EMCMOT]SERVO_PERIOD key=[EMCMOT]SHMEM_KEY num_joints=[TRAJ]AXES
@@ -243,9 +243,9 @@ net estop-out <= iocontrol.0.user-enable-out
 # we will put them on two separate pins and 'or' the two signals together
 setp debounce.2.delay 100
 net deb2.0 debounce.2.0.in <= parport.1.pin-15-in
-net tool_length_in or2.1.in0 <= debounce.2.0.out
+net probe-atlas or2.1.in0 <= debounce.2.0.out
 net deb2.1 debounce.2.1.in <= parport.1.pin-13-in-not
-net z_probe_in or2.1.in1 <= debounce.2.1.out
+net probe-zpuck or2.1.in1 <= debounce.2.1.out
 net probe-in motion.probe-input <= or2.1.out
 
 
@@ -254,13 +254,13 @@ net probe-in motion.probe-input <= or2.1.out
 net spindle-cw => parport.0.pin-14-out
 net spindle-cw <= motion.spindle-forward
 
-# connect the shop vac to the mist coolant signal
-net mist iocontrol.0.coolant-mist => parport.0.pin-16-out
+# connect the 5VDC AUX to the mist (M7) signal
+net coolant-mist iocontrol.0.coolant-mist => parport.0.pin-16-out
 
 
 # PWM
 loadrt abs count=1
-loadrt pwmgen output_type=0
+loadrt pwmgen output_type=0,0
 addf pwmgen.update servo-thread
 addf pwmgen.make-pulses base-thread
 addf abs.0 servo-thread
@@ -289,8 +289,20 @@ setp pwmgen.0.offset 0.0
 setp pwmgen.0.dither-pwm true
 net spindle-cw <= motion.spindle-forward
 
-# connect the shop vac to the flood coolant signal
-net flood iocontrol.0.coolant-flood => parport.0.pin-14-out
+# connect the 120VAC Outlet to the flood (M8) signal
+net coolant-flood iocontrol.0.coolant-flood => parport.0.pin-14-out
+
+
+# LASER
+# pendant board modified to redirect probe header from pin-11-in to pin-14-out
+# only turns on when program running and command sent
+net laser-cmd motion.analog-out-00 => pwmgen.1.value
+net laser-on halui.program.is-running => pwmgen.1.enable
+net laser-pwm pwmgen.1.pwm => parport.1.pin-14-out
+setp pwmgen.1.pwm-freq 1000
+setp pwmgen.1.scale 100
+setp pwmgen.1.offset 0
+setp pwmgen.1.dither-pwm true
 
 
 loadusr -W hal_manualtoolchange
@@ -332,8 +344,8 @@ setp mux4.0.in2 0.001
 setp mult2.0.in0 10
 
 # The inputs to the mux4 component
-net scale1 mux4.0.sel0 <= parport.1.pin-09-in
-net scale2 mux4.0.sel1 <= parport.1.pin-10-in
+net mpg-scale1 mux4.0.sel0 <= parport.1.pin-09-in
+net mpg-scale2 mux4.0.sel1 <= parport.1.pin-10-in
 
 # The output from the mux4 is sent to each axis jog scale
 net mpg-scale <= mux4.0.out
@@ -342,10 +354,10 @@ net mpg-scale => axis.1.jog-scale
 net mpg-scale => axis.2.jog-scale
 # A-axis is rotational so scale needs to be in degrees
 net mpg-scale => mult2.0.in1
-net rot-scale axis.3.jog-scale <= mult2.0.out
+net mpg-rot-scale axis.3.jog-scale <= mult2.0.out
 
 # LED
-net led0 halui.mode.is-manual => parport.1.pin-01-out
+net mpg-led halui.mode.is-manual => parport.1.pin-01-out
 
 # The MPG inputs
 net mpg-a encoder.0.phase-A <= parport.1.pin-02-in
@@ -358,9 +370,8 @@ net mpg-z axis.2.jog-enable <= parport.1.pin-06-in
 net mpg-4 axis.3.jog-enable <= parport.1.pin-07-in
 
 # The encoder output counts to the axis. Only the selected axis will move.
-net pend-counts <= encoder.0.counts
-net pend-counts => axis.0.jog-counts
-net pend-counts => axis.1.jog-counts
-net pend-counts => axis.2.jog-counts
-net pend-counts => axis.3.jog-counts
-
+net mpg-counts <= encoder.0.counts
+net mpg-counts => axis.0.jog-counts
+net mpg-counts => axis.1.jog-counts
+net mpg-counts => axis.2.jog-counts
+net mpg-counts => axis.3.jog-counts

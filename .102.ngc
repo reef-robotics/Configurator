@@ -1,8 +1,16 @@
 o102 SUB
-REPLACE_GUNITS
-M5 M9
-G53 G90 G0 Z0
-G91 G38.2 Z-REPLACE_ZP_DIST FREPLACE_ZP_FEED
-G10 L20 P0 ZREPLACE_ZP_HEIGHT
-G53 G90 G0 Z0
+
+#<_ZP_HEIGHT> = REPLACE_ZP_HEIGHT
+#<_MULTIPLIER> = REPLACE_MULTIPLIER
+#<_Z_MIN> = REPLACE_ZMIN
+
+M5 M9							(turn off spindle and shop vac)
+REPLACE_GUNITS								(set units)
+G53 G90 G0 Z0					(retract z)
+
+G10 L2 P9 Z0									(remove Z offset in G59.3)
+G91 G38.2 Z-#<_Z_MIN> F[10 * #<_MULTIPLIER>]	(feed down until probe is active)
+G10 L20 P0 Z#<_ZP_HEIGHT>
+G53 G90 G0 Z0					(retract most of the way up)
+
 o102 ENDSUB
