@@ -128,7 +128,7 @@ nf_pbx.start(root_window)
 nf_pbx.makecommand(root_window, "_", _)
 rs274.options.install(root_window)
 root_window.tk.call("set", "version", linuxcnc.version)
-root_window.tk.call("set", "pbx_version", "2.0") ### ADDED BY PROBOTIX
+root_window.tk.call("set", "pbx_version", "1.7") ### ADDED BY PROBOTIX
 
 try:
 	nf_pbx.source_lib_tcl(root_window,"axis.tcl")
@@ -852,24 +852,6 @@ class LivePlotter:
 			if self.stat.axis_mask & (1<<i) and l:
 				on_any_limit = True
 		vupdate(vars.on_any_limit, on_any_limit)
-
-### ADDED BY PROBOTIX
-		# get current coordinate system
-		vupdate(vars.current_g5x, g5x_coordinate_systems[self.stat.g5x_index])
-		#offset_x = self.stat.g5x_offset[0]
-		#offset_y = self.stat.g5x_offset[1]
-		#offset_z = self.stat.g5x_offset[2]
-		#vupdate(vars.current_g5x, _("%s Offsets: X%g Y%g Z%g") % g5x_coordinate_systems[self.stat.g5x_index], offset_x, offset_y, offset_z)
-		# display spindle speed
-		if self.stat.spindle_speed == 0.0:
-			vupdate(vars.current_spindle_speed, _("Spindle: OFF"))
-		elif self.stat.spindle_speed == 1.0:
-			# account for routers
-			vupdate(vars.current_spindle_speed, _("Spindle: ON"))
-		else:
-			vupdate(vars.current_spindle_speed, _("Spindle: %s rpm") % self.stat.spindle_speed)
-### END BY PROBOTIX
-
 		global current_tool
 		current_tool = self.stat.tool_table[0]
 		if current_tool:
@@ -1259,11 +1241,11 @@ widgets = nf_pbx.Widgets(root_window,
 	("joint_9", Radiobutton, tabs_manual + ".joints.joint9"),
 
 	("jogincr", Entry, tabs_manual + ".jogf.jog.jogincr"),
-	("override", Checkbutton, tabs_manual + ".jogf.jog.override"), ### ADDED BY PROBOTIX
+	("override", Checkbutton, tabs_manual + ".jogf.override"),
 
 	("ajogspeed", Entry, pane_top + ".ajogspeed"),
 
-	("lubel", Label, tabs_manual + ".coolantl"), ### ADDED BY PROBOTIX
+	("lubel", Label, tabs_manual + ".coolant"),
 	("flood", Checkbutton, tabs_manual + ".flood"),
 	("mist", Checkbutton, tabs_manual + ".mist"),
 
@@ -1383,7 +1365,7 @@ def jogspeed_incremental(dir=1):
 			# If it was "Continous" just before, then don't change last jog increment!
 			jogincr_index_last += 1
 		if jogincr_index_last >= jogincr_size:
-			jogincr_index_last = 1 ###
+			jogincr_index_last = 1
 	else:
 		if cursel > 0:
 			jogincr_index_last -= 1
@@ -1598,11 +1580,6 @@ all_systems = ['P1 G54', 'P2 G55', 'P3 G56', 'P4 G57', 'P5 G58',
 			'P6 G59', 'P7 G59.1', 'P8 G59.2', 'P9 G59.3',
 			_('T    Tool Table')]
 
-### ADDED BY PROBOTIX
-g5x_coordinate_systems = ['P0 G53', 'P1 G54', 'P2 G55', 'P3 G56', 'P4 G57', 'P5 G58',
-			'P6 G59', 'P7 G59.1', 'P8 G59.2', 'P9 G59.3']
-### END BY PROBOTIX
-
 class _prompt_touchoff(_prompt_float):
 	def __init__(self, title, text_pattern, default, defaultsystem):
 		systems = all_systems[:]
@@ -1680,7 +1657,7 @@ def get_jog_speed(a):
 
 def get_max_jog_speed(a):
 	if vars.joint_mode.get() or a in (0,1,2,6,7,8):
-		return vars.max_speed.get() ###
+		return vars.max_speed.get()
 	else: return vars.max_aspeed.get()
 
 def run_warn():
@@ -2008,32 +1985,12 @@ class TclCommands(nf_pbx.TclCommands):
 			(_("rs274ngc files"), ".ngc")) + extensions + \
 			((_("All files"), "*"),)
 		f = root_window.tk.call("tk_getOpenFile", "-initialdir", open_directory,
-			"-filetypes", types, "-title", "Select Your Program") ### ADDED BY PROBOTIX
+			"-filetypes", types, "-title", "Select Your G-code Program")
 		if not f: return
 		o.set_highlight_line(None)
 		f = str(f)
 		open_directory = os.path.dirname(f)
 		commands.open_file_name(f)
-
-#### ADDED BY PROBOTIX
-	def open_file_usb(*event):
-		if running(): return
-		global open_directory
-		all_extensions = tuple([".ngc",".tap"])
-		for e in extensions:
-			all_extensions = all_extensions + tuple(e[1])
-		types = (
-			(_("All machinable files"), all_extensions),
-			(_("rs274ngc files"), ".ngc")) + extensions + \
-			((_("All files"), "*"),)
-		f = root_window.tk.call("tk_getOpenFile", "-initialdir", "/media/",
-			"-filetypes", types, "-title", "Select Your Program")
-		if not f: return
-		o.set_highlight_line(None)
-		f = str(f)
-		open_directory = os.path.dirname(f)
-		commands.open_file_name(f)
-### END BY PROBOTIX
 
 	def remote (cmd,arg=""):
 		if cmd == "clear_live_plot":
@@ -2495,44 +2452,6 @@ class TclCommands(nf_pbx.TclCommands):
 		o.tkRedraw()
 		reload_file(False)
 
-### ADDED BY PROBOTIX
-	def xy_origin(event=None, new_axis_value = None):
-		global system
-		if not manual_ok(): return
-		if joints_mode(): return
-		system = vars.touch_off_system.get()
-		ensure_mode(linuxcnc.MODE_MDI)
-		s.poll()
-		offset_command = "G10 L20 P0 X0 Y0"
-		c.mdi(offset_command)
-		c.wait_complete()
-
-		ensure_mode(linuxcnc.MODE_MANUAL)
-		s.poll()
-		o.tkRedraw()
-		reload_file(False)
-
-	def z_origin(event=None, new_axis_value = None):
-		global system
-		if not manual_ok(): return
-		if joints_mode(): return
-		system = vars.touch_off_system.get()
-		ensure_mode(linuxcnc.MODE_MDI)
-		s.poll()
-		offset_command = "G10 L20 P0 Z0"
-		c.mdi(offset_command)
-		c.wait_complete()
-
-		ensure_mode(linuxcnc.MODE_MANUAL)
-		s.poll()
-		o.tkRedraw()
-		reload_file(False)
-
-	def test_button(event=None, new_axis_value = None):
-		open_directory = os.path.dirname("/home/probotix/linuxcnc/nc_files")
-		commands.open_file_name("/home/probotix/linuxcnc/nc_files/test.ngc")
-### END BY PROBOTIX
-
 	def set_axis_offset(event=None):
 		commands.touch_off(new_axis_value=0.)
 
@@ -2744,8 +2663,6 @@ vars = nf_pbx.Variables(root_window,
 	("touch_off_system", StringVar),
 	("machine", StringVar),
 	("on_any_limit", BooleanVar),
-	("current_g5x", IntVar), ### ADDED BY PROBOTIX
-	("current_spindle_speed", IntVar), ### ADDED BY PROBOTIX
 )
 vars.linuxcnctop_command.set(os.path.join(os.path.dirname(sys.argv[0]), "linuxcnctop"))
 vars.highlight_line.set(-1)
@@ -2769,7 +2686,7 @@ vars.optional_stop.set(ap.getpref("optional_stop", True))
 def user_live_update():
 	pass
 
-vars.touch_off_system.set("P1  G54")
+vars.touch_off_system.set("P1 G54")
 
 update_recent_menu()
 
@@ -2951,7 +2868,7 @@ def jog_on(a, b):
 	if not manual_tab_visible(): return
 	if isinstance(a, (str, unicode)):
 		a = "xyzabcuvw".index(a)
-	if a < 3: ###
+	if a < 3:
 		if vars.metric.get(): b = b / 25.4
 		b = from_internal_linear_unit(b)
 	if jog_after[a]:

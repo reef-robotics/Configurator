@@ -1,11 +1,11 @@
 #!/bin/bash
-CONFIG_NAME="PROBOTIX LinuxCNC Configurator"
+CONFIG_NAME="PROBOTIX Combined LinuxCNC Configurator"
 #
 #	Copyright 2018 PROBOTIX
 #	Originally by Len Shelton
 #	Updated by Kaden Lewis
 #
-_VERSION="2.6.0"
+_VERSION="3.0.0-b"
 
 ###################################################################################################
 # 	some variables
@@ -439,11 +439,48 @@ esac
 f_log "ORDER_NO=$ORDER_NO" "both"
 
 ###################################################################################################
-# 	Machine Selection
+# 	Series & Machine Selection
 #
+GX=("GX2525" "GX2550" "GX3725" "GX3750" "GX5050" "CUSTOM")
 GALAXY=("V90MK2" "COMET" "METEOR" "ASTEROID" "NEBULA" "CUSTOM")
-SERIES="GALAXY"
-SERIESARR=( "${GALAXY[@]}" )
+FIREBALL=("V90MK2" "COMET" "METEOR" "ASTEROID" "METEORXL" "CUSTOM")
+
+if [ -z $SERIES ]; then
+	f_prompt "Select machine series:" "* The series name can be determined by looking at the stickers."
+	select x in "GX" "Galaxy" "Fireball"; do
+		case $x in
+			"GX" )
+				SERIES="GX"
+				break;;
+			"Galaxy" )
+				SERIES="GALAXY"
+				break;;
+			"Fireball" )
+			 	SERIES="FIREBALL"
+				break;;
+		esac
+	done
+fi
+
+case $SERIES in
+	"GX" )
+		SERIESARR=( "${GX[@]}" )
+		UPRIGHT="TALL"
+		ZBEARINGS=4
+		ACME="HELIX"
+		DRIVERS="MONDOSTEP"
+		MOUNT="LONG"
+		;;
+	"GALAXY" )
+		SERIESARR=( "${GALAXY[@]}" )
+		;;
+	"FIREBALL" )
+	 	SERIESARR=( "${FIREBALL[@]}" )
+	 	UPRIGHT="SHORT"
+	 	ZBEARINGS=2
+		;;
+esac
+
 f_log "SERIES=$SERIES" "both"
 
 if [ -z $MACHINE ]; then
@@ -461,21 +498,27 @@ case $MACHINE in
 		UPRIGHT="SHORT"
 		ZBEARINGS=2
 		;;
-	"COMET" )
+	"GX2525" | "COMET" )
 		X_MAX_LIMIT=26.125
 		Y_MAX_LIMIT=25.1152
 		;;
-	"METEOR" )
+	"GX2550" | "METEOR" )
 		X_MAX_LIMIT=26.125
 		Y_MAX_LIMIT=52.2
 		;;
-	"ASTEROID" )
+	"GX3725" | "ASTEROID" )
 		X_MAX_LIMIT=37.25
 		Y_MAX_LIMIT=25.1152
 		;;
 	"GX3750" | "NEBULA" | "METEORXL" )
 		X_MAX_LIMIT=37.25
 		Y_MAX_LIMIT=52.2
+		;;
+	"GX5050" )
+		X_MAX_LIMIT=53.6
+		Y_MAX_LIMIT=51
+		UPRIGHT="TALL"
+		ZBEARINGS=4
 		;;
 	"CUSTOM" )
 		f_log "prompt for custom x travel"
@@ -499,6 +542,11 @@ esac
 
 f_log "MACHINE=$MACHINE" "both"
 
+if [ "$MACHINE" != "GX3750" ]; then
+	# only GX3750 has laser option
+	LASER="NO"
+fi
+
 ###################################################################################################
 # 	Step 3a: up-rights (short or tall)
 #
@@ -517,7 +565,7 @@ if [ -z $UPRIGHT ]; then
 	done
 fi
 
-if [ "$UPRIGHT" = "TALL" ]; then
+if [ "$SERIES" = "GX" ] || [ "$UPRIGHT" = "TALL" ] && [ "$MACHINE" != "GX5050" ]; then
 	f_log "adjust Y_MAX_LIMIT for tall uprights"
 	Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
 fi
@@ -860,7 +908,7 @@ case $SENSOR in
 			done
 		fi
 		f_log "ZPUCK=$ZPUCK" "both"
-		;;
+		;; # ( this is here only to fix Atoms syntax colors
 	"NONE" )
 		f_log "remove sensors from side panel"
 		sed -i '/SENSORS/,+32d' .TEMP.xml
@@ -1339,7 +1387,17 @@ if [ "$INSTALL_TYPE" = "NEW" ]; then
 fi
 
 f_log "installing PROBOTIX Axis Interface"
-cp -Rfd .axis_files/axis/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
+case $SERIES in
+	"GX" )
+		cp -Rfd .axis_files/axis/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
+		# remove duplicate touch-off buttons
+		sed -i '/SET_ORIGIN/,+15d' .TEMP.xml
+		sed -i '/HALUI_TOUCH/,+2d' .TEMPpostgui.hal
+		;;
+	"GALAXY" | "FIREBALL" )
+		cp -Rfd .axis_files/axis_1.7/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
+		;;
+esac
 # create symlink to axis program
 sudo ln -sTf /home/probotix/linuxcnc/configs/PROBOTIX/axis/axis /usr/bin/probotix-axis
 sudo ln -sTf /home/probotix/linuxcnc/configs/PROBOTIX/axis /usr/share/probotix-axis
@@ -1371,7 +1429,7 @@ cp .TEMP102.ngc /home/probotix/linuxcnc/nc_files/subs/102.ngc
 # create link to LinuxCNC on desktop
 f_log "save LinuxCNC desktop link"
 sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' .TEMP.desktop
-cp .TEMP.desktop /home/probotix/Desktop/$MACHINE.desktop
+cp .TEMP.desktop /home/probotix/Desktop/probotix.desktop
 
 # wait for LinuxCNC icon to be created
 sleep 1

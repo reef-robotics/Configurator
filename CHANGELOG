@@ -26,6 +26,19 @@
 
 ## [Unreleased]
 
+## [3.0.0] - 2018-10-28
+### Changed
+- Desktop icon filename changed to "probotix.desktop" but will still display as machine name
+### Added
+- Series selection with new defaults
+- Series determines which PROBOTIX Axis Interface version is installed
+- Reset Offsets button to sidebar for current coordinate system
+### Fixed
+- Possible fix for custom StepConf to be tested later
+- Possible fix for mysterious growing tool-lengths in ATLaS
+### Removed
+- Unused MDI_COMMANDs from ini file
+
 ## [2.6.0] - 2018-10-23
 ### Changed
 - More POSIX friendly condition testing
@@ -78,6 +91,7 @@
 - Placed prompt for router mount after sensor prompt as we only need to know mount type for ATLaS usage
 ### Added
 - More descriptions for questions
+- Force system REBOOT when needed
 ### Fixed
 - Only accept numbers for ORDER_NO
 
