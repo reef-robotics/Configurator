@@ -23,9 +23,31 @@
 - Rotate g-code functions
 - Update sample g-code programs
 - Increase debounce time for limits only
-- Put axis files back in original directories
 
 ## [Unreleased]
+
+## [2.6.0] - 2018-10-23
+### Changed
+- More POSIX friendly condition testing
+- Only accept floating point numbers for custom machine travel and ZPUCK
+- Cleaned up SENSORS section to remove redundant code
+- Moved all system file changes to end of script in case of early termination
+- Move logging before action for better issue tracking
+- Corrected references to mist/flood to AUX/Outlet in PROBOTIX Axis Interface
+- Grouped items in PyVCP.xml sidebar in PROBOTIX Axis Interface
+- PROBOTIX Axis Interface no longer replaces default Axis
+- Switched back to older version of PROBOTIX Axis Interface for Fireball/Galaxy Series machines
+- Removed Z offsets from example tools in tool.tbl
+- Rewrote Z-Puck subroutine (102.ngc)
+- Always save known values to ATLaS (100.ngc) and Z-Puck (102.ngc) files
+- Config dump file naming convention updated
+### Added
+- Ability to read previous config file and allow changing individual options
+- Check for DEBUG file to prevent clearing screen between prompts
+- Save lspci -v output for each config dump
+### Removed
+- No longer log screen size to config
+- Duplicate buttons on PyVCP.xml sidebar
 
 ## [2.5.0] - 2018-08-27
 ### Fixed
