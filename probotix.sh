@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_NAME="PROBOTIX LinuxCNC Configurator"
+CONFIG_NAME="PROBOTIX Galaxy Series LinuxCNC Configurator"
 #
 #	Copyright 2018 PROBOTIX
 #	Originally by Len Shelton
