@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_NAME="PROBOTIX Combined LinuxCNC Configurator"
+CONFIG_NAME="PROBOTIX GX Series LinuxCNC Configurator"
 #
 #	Copyright 2018 PROBOTIX
 #	Originally by Len Shelton
@@ -445,22 +445,8 @@ GX=("GX2525" "GX2550" "GX3725" "GX3750" "GX5050" "CUSTOM")
 GALAXY=("V90MK2" "COMET" "METEOR" "ASTEROID" "NEBULA" "CUSTOM")
 FIREBALL=("V90MK2" "COMET" "METEOR" "ASTEROID" "METEORXL" "CUSTOM")
 
-if [ -z $SERIES ]; then
-	f_prompt "Select machine series:" "* The series name can be determined by looking at the stickers."
-	select x in "GX" "Galaxy" "Fireball"; do
-		case $x in
-			"GX" )
-				SERIES="GX"
-				break;;
-			"Galaxy" )
-				SERIES="GALAXY"
-				break;;
-			"Fireball" )
-			 	SERIES="FIREBALL"
-				break;;
-		esac
-	done
-fi
+# Series selection removed
+SERIES="GX"
 
 case $SERIES in
 	"GX" )
