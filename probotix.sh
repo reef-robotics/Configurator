@@ -5,7 +5,7 @@ CONFIG_NAME="PROBOTIX LinuxCNC Configurator"
 #	Originally by Len Shelton
 #	Updated by Kaden Lewis
 #
-_VERSION="2.6.0"
+_VERSION="3.0.0-b"
 
 ###################################################################################################
 # 	some variables
