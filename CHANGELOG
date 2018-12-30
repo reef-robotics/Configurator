@@ -26,6 +26,14 @@
 
 ## [Unreleased]
 
+## [3.1.0] - 2018-12-29
+### Changed
+- Descriptions to be more descriptive. Hopefully.
+### Added
+- Check for True/False values in older config files.
+### Removed
+- Limit for only GX3750 machines having a laser.
+
 ## [3.0.0] - 2018-10-28
 ### Changed
 - Desktop icon filename changed to "probotix.desktop" but will still display as machine name
