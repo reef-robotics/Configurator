@@ -96,7 +96,7 @@ def makewidget(master, klass, path):
     self.master = master
     self.tk = master.tk
     return self
- 
+
 def find_prefix(f):
     s = os.path.join(f, "share")
     if os.path.exists(s): return f
@@ -105,6 +105,7 @@ def find_prefix(f):
 
 PREFIX = "/usr"
 SHARE = os.path.join(PREFIX, "share", "probotix-axis")
+#SHARE = os.path.dirname(__file__)
 tcl_libdir = os.path.join(SHARE, "tcl")
 
 def source_lib_tcl(r, f):

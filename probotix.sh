@@ -5,7 +5,7 @@ CONFIG_NAME="PROBOTIX Galaxy Series LinuxCNC Configurator"
 #	Originally by Len Shelton
 #	Updated by Kaden Lewis
 #
-_VERSION="3.0.0-b"
+_VERSION="3.1.0"
 
 ###################################################################################################
 # 	some variables
@@ -26,7 +26,7 @@ f_prompt() {
 	if [ $DEBUG -eq 0 ]; then
 		clear
 	fi
-	printf '%s\n' "$CONFIG_NAME v$VERSION"
+	printf '%s\n' "$CONFIG_NAME v$_VERSION"
 	printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
 	printf '%s\n' "$1"
 	if [ -n "$2" ]; then
@@ -422,7 +422,7 @@ cp .icon.desktop .TEMP.desktop
 if [ -z $ORDER_NO ]; then
 	f_log "prompt for order number"
 	until [[ $ORDER_NO =~ ^[0-9]+$ ]]; do
-		f_prompt "Enter Order Number:"
+		f_prompt "Enter Order Number:" "* If you do not know your order number, enter 00000"
 		read ORDER_NO
 	done
 fi
@@ -538,11 +538,12 @@ fi
 #
 if [ -z $UPRIGHT ]; then
 	f_log "prompt for up-right"
-	f_prompt "Choose your up-right:" "* Tall up-rights have a triangle cut out, the older Short ones do not.\n* All 2018+ machines have Tall up-rights."
+	f_prompt "Choose your up-right:" "* Tall up-rights have a triangle cut out (all machines 2018+).\n* Short up-rights are solid with no holes."
 	select x in "Tall" "Short"; do
 		case $x in
 			"Short" )
 				UPRIGHT="SHORT"
+				ZBEARINGS=2
 				break;;
 			"Tall" )
 				UPRIGHT="TALL"
@@ -551,7 +552,7 @@ if [ -z $UPRIGHT ]; then
 	done
 fi
 
-if [ "$UPRIGHT" = "TALL" ]; then
+if [ "$SERIES" = "GX" ] || [ "$UPRIGHT" = "TALL" ] && [ "$MACHINE" != "GX5050" ]; then
 	f_log "adjust Y_MAX_LIMIT for tall uprights"
 	Y_MAX_LIMIT=$(expr "scale=4; $Y_MAX_LIMIT-1" | bc -l)
 fi
@@ -564,7 +565,7 @@ f_log "UPRIGHT=$UPRIGHT" "both"
 #
 if [ -z $ZBEARINGS ]; then
 	f_log "prompt for z bearings"
-	f_prompt "Number of Z bearings:" "* 2018+ machines have four Z bearings, older have two Z bearings."
+	f_prompt "Number of Z bearings:" "* Tall up-rights typically have four Z bearings (all machines 2018+).\n* Older machines with short up-rights typically have two Z bearings."
 	select x in "Four" "Two"; do
 		case $x in
 			"Two" )
@@ -705,12 +706,12 @@ if [ -z $SPID ]; then
 fi
 
 case $SPID in
-	"YES" )
+	"YES" | "True" )
 		# remove router code
 		f_log "removing router controls from hal file"
 		sed -i '/ROUTER/,+6d' .TEMP.hal
 		;;
-	"NO" )
+	"NO" | "False" )
 		# remove superpid code
 		f_log "removing superpid from hal files"
 		sed -i '/SUPERPID/,+10d' .TEMP.hal
@@ -731,7 +732,7 @@ f_log "SPID=$SPID" "both"
 #
 if [ -z $ACME ]; then
 	f_log "prompt for acme"
-	f_prompt "Choose your ACME screw:" "* Helix: blue drive nuts\n* Roton: black drive nuts\n* All 2016+ machines have Helix."
+	f_prompt "Choose your ACME screw:" "* Helix: blue drive nuts on lead-screws (all machines 2016+)\n* Roton: black drive nuts on lead-screws"
 	select x in "Helix" "Roton"; do
 		case $x in
 			"Roton" )
@@ -767,7 +768,7 @@ sed -i -e 's/REPLACE_ZVELOCITY/'"Z_MAXVEL"'/' .TEMP.ini
 #
 if [ -z $DRIVERS ]; then
 	f_log "prompt for drivers"
-	f_prompt "Choose your drivers:" "* MondoStep (newer, bi-polar, black cabinet or Unity controller).\n* Probostep (older, uni-polar, beige control cabinet).\n* All 2016+ machines have MondoStep."
+	f_prompt "Choose your drivers:" "* MondoStep: bi-polar, black cabinet or Unity controller (2016+ machines).\n* Probostep: uni-polar, beige control cabinet."
 	select x in "MondoStep" "ProboStep"; do
 		case $x in
 			"ProboStep" )
@@ -970,7 +971,7 @@ esac
 #
 if [ -z $MOUNT ]; then
 	f_log "prompt for router mount"
-	f_prompt "Choose Your Router Mount:" "* This only matters if you use the ATLaS."
+	f_prompt "Choose Your Router Mount:" "* This only matters if you use the ATLaS.\n* One-piece mounts are made of a single piece of metal (all machines 2018+).\n* Two-piece mounts are L shaped and made from two joined pieces of metal."
 	select x in "One-Piece Mount" "Two-Piece with 3/4in Back Plate" "Two-Piece with 1/2in Back Plate"; do
 		case $x in
 			"One-Piece Mount" | "Two-Piece with 3/4in Back Plate" )
@@ -1038,20 +1039,18 @@ if [ -z $ROTARY ]; then
 fi
 
 case $ROTARY in
-	"YES" )
+	"YES" | "True" )
 		COORDINATES="X Y Z A"
 		COORDINATES_="X\ Y\ Z\ A"
 		AXES=4
 		;;
-	"NO" )
+	"NO" | "False" )
 		COORDINATES="X Y Z"
 		COORDINATES_="X\ Y\ Z"
 		AXES=3
-		# remove a-axis from ini file
+		# remove a-axis from files
 		sed -i '/AXIS_3/,+10d' .TEMP.ini
-		# remove a-axis from hal file
 		sed -i '/A-AXIS/,+13d' .TEMP.hal
-		# remove remaining a-axis references from hal file
 		sed -i '/axis.3/d' .TEMP.hal
 		;;
 esac
@@ -1101,36 +1100,35 @@ case $SWAP_TO_A in
 	"X" )
 		XSTEP="17"
 		XDIR="01"
-		COORDINATES="X Y Z"
-		COORDINATES_="X\ Y\ Z"
-		AXES=3
+		ASTEP="02"
+		ADIR="03"
 		;;& # continue matching
 	"Y1" )
 		Y1STEP="17"
 		Y1DIR="01"
-		COORDINATES="X Y Z"
-		COORDINATES_="X\ Y\ Z"
-		AXES=3
+		ASTEP="04"
+		ADIR="05"
 		;;&
 	"Y2" )
 		Y2STEP="17"
 		Y2DIR="01"
-		COORDINATES="X Y Z"
-		COORDINATES_="X\ Y\ Z"
-		AXES=3
+		ASTEP="08"
+		ADIR="09"
 		;;&
 	"Z" )
 		ZSTEP="17"
 		ZDIR="01"
+		ASTEP="06"
+		ADIR="07"
+		;;&
+	"X" | "Y1" | "Y2" | "Z" )
 		COORDINATES="X Y Z"
 		COORDINATES_="X\ Y\ Z"
 		AXES=3
-		;;&
-	"X" | "Y1" | "Y2" | "Z" )
-		# remove a-axis from ini file
+		# remove a-axis from files
 		sed -i '/AXIS_3/,+10d' .TEMP.ini
-		# remove a-axis from hal file
 		sed -i '/A-AXIS/,+13d' .TEMP.hal
+		sed -i '/axis.3/d' .TEMP.hal
 		;;
 esac
 
@@ -1154,7 +1152,7 @@ sed -i -e "s/XSTEP/$XSTEP/" \
 #
 if [ -z $SOFT_ONLY ]; then
 	f_log "prompt for soft limits"
-	f_prompt "Do you want to ignore the hardware limit switches?" "* For use when having intermittent limit switch issues from faulty switches or electrical noise.\n* If unsure, say NO."
+	f_prompt "Do you want to ignore the hardware limit switches?" "* For use when having intermittent limit switch issues from faulty switches or electrical noise.\n* Switches will still be used for Homing.\n* If unsure, say NO."
 	select x in "No" "Yes"; do
 		case $x in
 			"Yes" )
@@ -1168,10 +1166,10 @@ if [ -z $SOFT_ONLY ]; then
 fi
 
 case $SOFT_ONLY in
-	"YES" )
+	"YES" | "True" )
 		sed -i '/LIMITS/,+5d' .TEMP.hal
 		;;
-	"NO" )
+	"NO" | "False" )
 		# nothing
 		;;
 esac
@@ -1223,9 +1221,9 @@ if [ -z $SWAP_PARPORTS ]; then
 fi
 
 case $SWAP_PARPORTS in
-	"NO" )
+	"NO" | "False" )
 		;;
-	"YES" )
+	"YES" | "True" )
 		PARPORT0=$IDENTB
 		PARPORT1="0x378"
 		f_prompt "New parallel port address:" "* PARPORT0 = $PARPORT0\n* PARPORT1 = $PARPORT1"
@@ -1415,7 +1413,7 @@ cp .TEMP102.ngc /home/probotix/linuxcnc/nc_files/subs/102.ngc
 # create link to LinuxCNC on desktop
 f_log "save LinuxCNC desktop link"
 sed -i -e 's/REPLACE_MACHINE/'"$MACHINE"'/' .TEMP.desktop
-cp .TEMP.desktop /home/probotix/Desktop/$MACHINE.desktop
+cp .TEMP.desktop /home/probotix/Desktop/probotix.desktop
 
 # wait for LinuxCNC icon to be created
 sleep 1
