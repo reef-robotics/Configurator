@@ -341,10 +341,10 @@ if [ "$INSTALL_TYPE" != "MODIFY" ]; then
 	# if a bin folder is found in the $HOME folder, then it is added to the $PATH
 	# this is where we will want to put any php scripts that we access from the GUI
 	if [ -d "/home/probotix/bin" ]; then
-		cp -f .g-code-filter.php /home/probotix/bin/g-code-filter.php
+		cp -fR .bin/* /home/probotix/bin
 	else
 		mkdir -p /home/probotix/bin
-		cp -f .g-code-filter.php /home/probotix/bin/g-code-filter.php
+		cp -fR .bin/* /home/probotix/bin
 		# this one will require a reboot
 		REBOOT=1
 	fi
