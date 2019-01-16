@@ -5,7 +5,7 @@ CONFIG_NAME="PROBOTIX Combined LinuxCNC Configurator"
 #	Originally by Len Shelton
 #	Updated by Kaden Lewis
 #
-_VERSION="3.1.0"
+_VERSION="3.1.1"
 
 ###################################################################################################
 # 	some variables
@@ -201,6 +201,7 @@ if [ -e $CONFIG_FILE ]; then
 										unset -v SOFT_ONLY
 										break;;
 									"Parallel Ports" )
+										unset -v SWAP_PARPORTS
 										unset -v PARPORT0
 										unset -v PARPORT1
 										break;;
