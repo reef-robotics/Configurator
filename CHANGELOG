@@ -26,6 +26,13 @@
 
 ## [Unreleased]
 
+## [3.1.0] - 2019-01-16
+### Fixed
+- Correctly clear previous value for SWAP_PARPORTS to allow prompting
+- Reverted to old tool.tbl formatting to avoid missing tool errors
+### Changed
+- Moved php files into .bin folder
+
 ## [3.1.0] - 2018-12-29
 ### Changed
 - Descriptions to be more descriptive. Hopefully.

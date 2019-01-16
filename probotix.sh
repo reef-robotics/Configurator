@@ -5,7 +5,7 @@ CONFIG_NAME="PROBOTIX Galaxy Series LinuxCNC Configurator"
 #	Originally by Len Shelton
 #	Updated by Kaden Lewis
 #
-_VERSION="3.1.0"
+_VERSION="3.1.1"
 
 ###################################################################################################
 # 	some variables
@@ -201,6 +201,7 @@ if [ -e $CONFIG_FILE ]; then
 										unset -v SOFT_ONLY
 										break;;
 									"Parallel Ports" )
+										unset -v SWAP_PARPORTS
 										unset -v PARPORT0
 										unset -v PARPORT1
 										break;;
@@ -341,10 +342,10 @@ if [ "$INSTALL_TYPE" != "MODIFY" ]; then
 	# if a bin folder is found in the $HOME folder, then it is added to the $PATH
 	# this is where we will want to put any php scripts that we access from the GUI
 	if [ -d "/home/probotix/bin" ]; then
-		cp -f .g-code-filter.php /home/probotix/bin/g-code-filter.php
+		cp -fR .bin/* /home/probotix/bin
 	else
 		mkdir -p /home/probotix/bin
-		cp -f .g-code-filter.php /home/probotix/bin/g-code-filter.php
+		cp -fR .bin/* /home/probotix/bin
 		# this one will require a reboot
 		REBOOT=1
 	fi
