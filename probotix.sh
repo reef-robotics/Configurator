@@ -5,7 +5,7 @@ CONFIG_NAME="PROBOTIX GX Series LinuxCNC Configurator"
 #	Originally by Len Shelton
 #	Updated by Kaden Lewis
 #
-_VERSION="3.1.0"
+_VERSION="3.1.1"
 
 ###################################################################################################
 # 	some variables
@@ -82,7 +82,7 @@ if [ -e "./debug" ]; then
 	DEBUG=1
 fi
 
-if [[ "$PWD/" = "/home/*" ]]; then
+if [[ "$INSTALLDIR/" != /media/* ]]; then
 	echo "You appear to have copied the Configurator to the Linux PC."
 	echo "Delete this and re-run from the removeable drive instead."
 	echo
@@ -201,8 +201,9 @@ if [ -e $CONFIG_FILE ]; then
 										unset -v SOFT_ONLY
 										break;;
 									"Parallel Ports" )
-										unset -v PARPORT0
-										unset -v PARPORT1
+										unset -v SWAP_PARPORTS
+										#unset -v PARPORT0
+										#unset -v PARPORT1
 										break;;
 								esac
 							done # select
@@ -341,10 +342,10 @@ if [ "$INSTALL_TYPE" != "MODIFY" ]; then
 	# if a bin folder is found in the $HOME folder, then it is added to the $PATH
 	# this is where we will want to put any php scripts that we access from the GUI
 	if [ -d "/home/probotix/bin" ]; then
-		cp -f .g-code-filter.php /home/probotix/bin/g-code-filter.php
+		cp -fR .bin/* /home/probotix/bin
 	else
 		mkdir -p /home/probotix/bin
-		cp -f .g-code-filter.php /home/probotix/bin/g-code-filter.php
+		cp -fR .bin/* /home/probotix/bin
 		# this one will require a reboot
 		REBOOT=1
 	fi
@@ -890,7 +891,7 @@ case $SENSOR in
 			done
 		fi
 		f_log "ZPUCK=$ZPUCK" "both"
-		;; # ( this is here only to fix Atoms syntax colors
+		;;
 	"NONE" )
 		f_log "remove sensors from side panel"
 		sed -i '/SENSORS/,+32d' .TEMP.xml
@@ -1265,48 +1266,49 @@ MAX_LINEAR_VELOCITY=$(expr 3.34*$I | bc -l)
 # folder should only exist during factory install
 if [ -d "$DUMP_DIR" ]; then
 	f_log "config dump"
-	echo "$CONFIG_NAME v$VERSION" >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "ORDER_NO    =" $ORDER_NO >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "MACHINE     =" $MACHINE >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "UPRIGHT     =" $UPRIGHT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "ZBEARINGS   =" $ZBEARINGS >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "UNITS       =" $UNITS >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "ACME        =" $ACME >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "DRIVERS     =" $DRIVERS >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "SPINDLE     =" $SPINDLE >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "MOUNT       =" $MOUNT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "SPID        =" $SPID >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "PENDANT     =" $PENDANT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "SENSOR      =" $SENSOR >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "ZPUCK       =" $ZPUCK >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "LASER       =" $LASER >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "ROTARY      =" $ROTARY >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "PARPORT0    =" $PARPORT0 >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "PARPORT1    =" $PARPORT1 >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "AXES        =" $AXES >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "COORDINATES =" $COORDINATES >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "ZTPI        =" $ZTPI >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XYSCALE     =" $XYSCALE >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "ZSCALE      =" $ZSCALE >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XY_MAXVEL   =" $XY_MAXVEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_MAXVEL    =" $Z_MAXVEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XY_MAXACCEL =" $XY_MAXACCEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_MAXACCEL  =" $Z_MAXACCEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XY_SMAX_ACC =" $XY_STEPGEN_MAXACCEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_SMAX_ACC  =" $Z_STEPGEN_MAXACCEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XY_MIN_LIMIT=" $XY_MIN_LIMIT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_MIN_LIMIT =" $Z_MIN_LIMIT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "X_MAX_LIMIT =" $X_MAX_LIMIT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Y_MAX_LIMIT =" $Y_MAX_LIMIT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_MAX_LIMIT =" $Z_MAX_LIMIT >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XY_HM_OFFSET=" $XY_HOME_OFFSET >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_HM_OFFSET =" $Z_HOME_OFFSET >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XY_SEARCH_VL=" $XY_SEARCH_VEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_SEARCH_VEL=" $Z_SEARCH_VEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "XY_LATCH_VEL=" $XY_LATCH_VEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "Z_LATCH_VEL =" $Z_LATCH_VEL >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "DEF_VELOCITY=" $DEFAULT_VELOCITY >> $DUMP_DIR/$ORDER_NO.CONFIG
-	echo "MAX_LIN_VEL =" $MAX_LINEAR_VELOCITY >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "$CONFIG_NAME v$_VERSION" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "ORDER_NO=$ORDER_NO" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "SERIES=$SERIES" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "MACHINE=$MACHINE" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "UPRIGHT=$UPRIGHT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "ZBEARINGS=$ZBEARINGS" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "UNITS=$UNITS" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "ACME=$ACME" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "DRIVERS=$DRIVERS" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "SPINDLE=$SPINDLE" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "MOUNT=$MOUNT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "SPID=$SPID" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "PENDANT=$PENDANT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "SENSOR=$SENSOR" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "ZPUCK=$ZPUCK" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "LASER=$LASER" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "ROTARY=$ROTARY" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "PARPORT0=$PARPORT0" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "PARPORT1=$PARPORT1" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "AXES=$AXES" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "COORDINATES=$COORDINATES" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "ZTPI=$ZTPI" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XYSCALE=$XYSCALE" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "ZSCALE=$ZSCALE" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XY_MAXVEL=$XY_MAXVEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_MAXVEL=$Z_MAXVEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XY_MAXACCEL=$XY_MAXACCEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_MAXACCEL=$Z_MAXACCEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XY_SMAX_ACC=$XY_STEPGEN_MAXACCEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_SMAX_ACC=$Z_STEPGEN_MAXACCEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XY_MIN_LIMIT=$XY_MIN_LIMIT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_MIN_LIMIT=$Z_MIN_LIMIT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "X_MAX_LIMIT=$X_MAX_LIMIT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Y_MAX_LIMIT=$Y_MAX_LIMIT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_MAX_LIMIT=$Z_MAX_LIMIT" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XY_HM_OFFSET=$XY_HOME_OFFSET" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_HM_OFFSET=$Z_HOME_OFFSET" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XY_SEARCH_VL=$XY_SEARCH_VEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_SEARCH_VEL=$Z_SEARCH_VEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "XY_LATCH_VEL=$XY_LATCH_VEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "Z_LATCH_VEL=$Z_LATCH_VEL" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "DEF_VELOCITY=$DEFAULT_VELOCITY" >> $DUMP_DIR/$ORDER_NO.CONFIG
+	echo "MAX_LIN_VEL=$MAX_LINEAR_VELOCITY" >> $DUMP_DIR/$ORDER_NO.CONFIG
 	lspci -v > $DUMP_DIR/$ORDER_NO.LSPCI
 fi
 
@@ -1369,6 +1371,8 @@ f_log "installing PROBOTIX Axis Interface"
 case $SERIES in
 	"GX" )
 		cp -Rfd .axis_files/axis/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
+		# install new GX ToolEditor
+		#cp -Rfd .tooledit /usr/bin/pbx-tooledit
 		# remove duplicate touch-off buttons
 		sed -i '/SET_ORIGIN/,+15d' .TEMP.xml
 		sed -i '/HALUI_TOUCH/,+2d' .TEMPpostgui.hal
