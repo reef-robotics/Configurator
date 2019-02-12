@@ -1,12 +1,12 @@
-POC		FMS		LEN		DIAM	COMMENT
-
-1		1		0.0000	0.0625	first tool
-2		2		0.0000	0.1250
-3		3		0.0000	0.5000
-4		4		0.0000	0.0000
-5		5		0.0000	0.0000
-6		6		0.0000	0.0000
-7		7		0.0000	0.0000
-8		8		0.0000	0.0000
-9		9		0.0000	0.0000
-10		10		0.0000	0.0000	last tool
+TOOL	POC		Z		DIAM	COMMENT
+;
+T1		P1		Z0		D0.0625	;1/16" end mill 
+T2		P2		Z0		D0.1250	;1/8" end mill 
+T3		P3		Z0		D0.5000	;1/2" end mill 
+T4		P4		Z0		D0 
+T5		P5		Z0		D0 
+T6		P6		Z0		D0 
+T7		P7		Z0		D0 
+T8		P8		Z0		D0 
+T9		P9		Z0		D0 
+T10		P10		Z0		D0	;last tool 
