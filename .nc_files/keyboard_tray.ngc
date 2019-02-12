@@ -1,6 +1,6 @@
 %
-G0 G54 G17 G20 G90 G40 G49
-G64 P0.010
+(Sample Keyboard Tray)
+G54 G17 G20 G90 G40 G49 G64 P0.010
 
 o100 CALL [1]
 

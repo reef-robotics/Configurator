@@ -18,20 +18,25 @@
 - Fix RS274_STARTUP_CODE to clear tool and offset
 - Make insmod edimax permanent
 - Probe from shorter height
-- Check for error on script keyboard input
 - Finish ngc2 filter
 - Rotate g-code functions
-- Update sample g-code programs
 - Increase debounce time for limits only
 
 ## [Unreleased]
 
-## [3.1.0] - 2019-01-16
+## [3.1.1] - 2019-02-12
 ### Fixed
 - Correctly clear previous value for SWAP_PARPORTS to allow prompting
-- Reverted to old tool.tbl formatting to avoid missing tool errors
+- Recreated tool.tbl file from working LinuxCNC installation
+- Better check for running directory of Configurator
 ### Changed
 - Moved php files into .bin folder
+- Formatting for config dump in preparation for future feature
+- Updated ToolEdit for future usage
+- Updated sample programs in /nc_files
+### Removed
+- Outdated screenshot of interface
+- Custom program for previous customer
 
 ## [3.1.0] - 2018-12-29
 ### Changed

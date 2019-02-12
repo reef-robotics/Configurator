@@ -1,4 +1,5 @@
 .axis_files/axis/images.bkup/**
+*.psd
 .CONFIGS/**
 LSPCI.txt
 apt_mirror.sh
