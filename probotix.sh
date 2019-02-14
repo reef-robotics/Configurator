@@ -5,7 +5,7 @@ CONFIG_NAME="PROBOTIX Galaxy Series LinuxCNC Configurator"
 #	Originally by Len Shelton
 #	Updated by Kaden Lewis
 #
-_VERSION="3.1.1"
+_VERSION="3.1.2"
 
 ###################################################################################################
 # 	some variables
