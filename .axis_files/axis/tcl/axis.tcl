@@ -199,7 +199,7 @@ label .info.g5x_coordinate_system \
 	-borderwidth 2 \
 	-relief sunken \
 	-textvariable current_g5x \
-	-width 25
+	-width 14
 
 label .info.commanded_spindle_speed \
 	-anchor w \

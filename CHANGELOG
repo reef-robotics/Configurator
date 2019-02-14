@@ -24,6 +24,13 @@
 
 ## [Unreleased]
 
+## [3.1.2] - 2019-02-14
+### Fixed
+- Recreated tool.tbl again and retained formatting to avoid further issues
+- Needed sudo to copy GX Tooleditor to /usr/bin
+### Changed
+- Reduced width of current coordinate system area in bottom info bar to help with lower resolution screens
+
 ## [3.1.1] - 2019-02-12
 ### Fixed
 - Correctly clear previous value for SWAP_PARPORTS to allow prompting
