@@ -1377,7 +1377,7 @@ case $SERIES in
 	"GX" )
 		cp -Rfd .axis_files/axis/* /home/probotix/linuxcnc/configs/PROBOTIX/axis/
 		# install new GX ToolEditor
-		#cp -Rfd .tooledit /usr/bin/pbx-tooledit
+		#sudo cp -Rfd .tooledit /usr/bin/pbx-tooledit
 		# remove duplicate touch-off buttons
 		sed -i '/SET_ORIGIN/,+15d' .TEMP.xml
 		sed -i '/HALUI_TOUCH/,+2d' .TEMPpostgui.hal
