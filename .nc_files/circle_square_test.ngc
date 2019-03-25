@@ -2,7 +2,7 @@
 (Circle-Square Test)
 (G55 touch-off all axes)
 
-G55 G90
+G55 G90 G20
 M3 S1
 G0 z0.25
 G0 X-2 Y0
